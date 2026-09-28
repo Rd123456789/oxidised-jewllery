@@ -1,0 +1,336 @@
+<div class="ox-page">
+  <div class="ox-page-header">
+    <div>
+      <h1 class="ox-page-title">Banners</h1>
+      <p class="mt-1 text-sm text-ink-soft">
+        Curate hero and promo imagery across the storefront.
+      </p>
+    </div>
+    <button type="button" class="ox-btn ox-btn--outline" (click)="reload()" [disabled]="loading()">
+      <app-icon name="refresh" [size]="15" />
+      Refresh
+    </button>
+  </div>
+
+  @if (panelOpen()) {
+    <section class="ox-card p-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-display text-lg text-ink">{{ editingId() ? 'Edit banner' : 'New banner' }}</h2>
+        <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" aria-label="Close form" (click)="closePanel()">
+          <app-icon name="close" [size]="16" />
+        </button>
+      </div>
+
+      <div class="mt-4 grid gap-4 lg:grid-cols-3">
+        <div class="space-y-4 lg:col-span-2">
+          <div>
+            <label class="ox-label" for="banner-title">Title</label>
+            <input
+              id="banner-title"
+              type="text"
+              class="ox-input"
+              [ngModel]="form().title"
+              (ngModelChange)="patch({ title: $event })"
+            />
+          </div>
+          <div>
+            <label class="ox-label" for="banner-subtitle">Subtitle</label>
+            <input
+              id="banner-subtitle"
+              type="text"
+              class="ox-input"
+              [ngModel]="form().subtitle"
+              (ngModelChange)="patch({ subtitle: $event })"
+            />
+          </div>
+          <div>
+            <label class="ox-label" for="banner-description">Description</label>
+            <textarea
+              id="banner-description"
+              rows="3"
+              class="ox-textarea"
+              [ngModel]="form().description"
+              (ngModelChange)="patch({ description: $event })"
+            ></textarea>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="ox-label" for="banner-cta-label">CTA label</label>
+              <input
+                id="banner-cta-label"
+                type="text"
+                class="ox-input"
+                placeholder="Shop now"
+                [ngModel]="form().ctaLabel"
+                (ngModelChange)="patch({ ctaLabel: $event })"
+              />
+            </div>
+            <div>
+              <label class="ox-label" for="banner-cta-url">CTA URL</label>
+              <input
+                id="banner-cta-url"
+                type="text"
+                class="ox-input"
+                placeholder="/shop"
+                [ngModel]="form().ctaUrl"
+                (ngModelChange)="patch({ ctaUrl: $event })"
+              />
+            </div>
+            <div>
+              <label class="ox-label" for="banner-secondary-label">Secondary CTA label</label>
+              <input
+                id="banner-secondary-label"
+                type="text"
+                class="ox-input"
+                [ngModel]="form().secondaryCtaLabel"
+                (ngModelChange)="patch({ secondaryCtaLabel: $event })"
+              />
+            </div>
+            <div>
+              <label class="ox-label" for="banner-secondary-url">Secondary CTA URL</label>
+              <input
+                id="banner-secondary-url"
+                type="text"
+                class="ox-input"
+                [ngModel]="form().secondaryCtaUrl"
+                (ngModelChange)="patch({ secondaryCtaUrl: $event })"
+              />
+            </div>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label class="ox-label" for="banner-position">Position</label>
+              <select
+                id="banner-position"
+                class="ox-select"
+                [ngModel]="form().position"
+                (ngModelChange)="patch({ position: $event })"
+              >
+                @for (position of positions; track position.value) {
+                  <option [value]="position.value">{{ position.label }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="ox-label" for="banner-align">Text align</label>
+              <select
+                id="banner-align"
+                class="ox-select"
+                [ngModel]="form().textAlign"
+                (ngModelChange)="patch({ textAlign: $event })"
+              >
+                @for (align of textAligns; track align) {
+                  <option [value]="align">{{ titleCase(align) }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="ox-label" for="banner-theme">Theme</label>
+              <select
+                id="banner-theme"
+                class="ox-select"
+                [ngModel]="form().theme"
+                (ngModelChange)="patch({ theme: $event })"
+              >
+                @for (theme of themes; track theme) {
+                  <option [value]="theme">{{ titleCase(theme) }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="ox-label" for="banner-sort">Sort order</label>
+              <input
+                id="banner-sort"
+                type="number"
+                class="ox-input"
+                [ngModel]="form().sortOrder"
+                (ngModelChange)="patch({ sortOrder: $event })"
+              />
+            </div>
+            <div>
+              <label class="ox-label" for="banner-starts">Starts</label>
+              <input
+                id="banner-starts"
+                type="date"
+                class="ox-input"
+                [ngModel]="form().startsAt"
+                (ngModelChange)="patch({ startsAt: $event })"
+              />
+            </div>
+            <div>
+              <label class="ox-label" for="banner-ends">Ends</label>
+              <input
+                id="banner-ends"
+                type="date"
+                class="ox-input"
+                [ngModel]="form().endsAt"
+                (ngModelChange)="patch({ endsAt: $event })"
+              />
+            </div>
+          </div>
+
+          <label class="flex items-center gap-2 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              class="ox-checkbox"
+              [ngModel]="form().isActive"
+              (ngModelChange)="patch({ isActive: $event })"
+            />
+            Active
+          </label>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <span class="ox-label">Banner image</span>
+            <app-image-uploader
+              [images]="formImages()"
+              folder="banners"
+              [maxFiles]="1"
+              (imagesChange)="setImage($event)"
+            />
+          </div>
+          <div>
+            <span class="ox-label">Mobile image (optional)</span>
+            <app-image-uploader
+              [images]="formMobileImages()"
+              folder="banners"
+              [maxFiles]="1"
+              (imagesChange)="setMobileImage($event)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 flex gap-2">
+        <button type="button" class="ox-btn ox-btn--primary" [disabled]="saving()" (click)="save()">
+          {{ saving() ? 'Saving…' : editingId() ? 'Save changes' : 'Create banner' }}
+        </button>
+        <button type="button" class="ox-btn ox-btn--ghost" (click)="closePanel()">Cancel</button>
+      </div>
+    </section>
+  }
+
+  @if (loading()) {
+    <div class="grid gap-4 lg:grid-cols-2">
+      @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+        <div class="ox-card p-4">
+          <div class="ox-skeleton aspect-[16/6] w-full"></div>
+          <div class="ox-skeleton mt-3 h-4 w-40"></div>
+        </div>
+      }
+    </div>
+  } @else if (failed()) {
+    <div class="ox-card flex flex-col items-center gap-3 px-6 py-12 text-center">
+      <span class="flex h-11 w-11 items-center justify-center rounded-full bg-rose/10 text-rose">
+        <app-icon name="alert" [size]="20" />
+      </span>
+      <p class="text-sm text-ink-soft">We could not load banners. Please try again.</p>
+      <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" (click)="reload()">Retry</button>
+    </div>
+  } @else {
+    @for (group of groups(); track group.position) {
+      <section class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="ox-display text-lg text-ink">{{ group.label }}</h2>
+          <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" (click)="openCreate(group.position)">
+            <app-icon name="plus" [size]="14" />
+            Add banner
+          </button>
+        </div>
+
+        @if (group.banners.length === 0) {
+          <p class="ox-help">No banners in this position yet.</p>
+        } @else {
+          <div class="grid gap-4 lg:grid-cols-2">
+            @for (banner of group.banners; track banner.id; let first = $first; let last = $last) {
+              <article class="ox-card overflow-hidden">
+                <div class="aspect-[16/6] w-full bg-sand">
+                  <img
+                    [src]="banner.image.url"
+                    [alt]="banner.image.alt ?? banner.title"
+                    class="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div class="space-y-2 p-4">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="font-display text-base text-ink">{{ banner.title }}</h3>
+                    <app-status-badge
+                      [label]="banner.isActive ? 'Active' : 'Hidden'"
+                      [tone]="banner.isActive ? 'success' : 'neutral'"
+                    />
+                    <span class="ox-badge ox-badge--info">{{ group.label }}</span>
+                  </div>
+                  @if (banner.subtitle) {
+                    <p class="text-sm text-ink-soft">{{ banner.subtitle }}</p>
+                  }
+                  @if (banner.ctaLabel && banner.ctaUrl) {
+                    <p class="text-xs text-ink-muted">
+                      CTA: <span class="font-semibold text-brass">{{ banner.ctaLabel }}</span>
+                      →
+                      <span class="font-mono">{{ banner.ctaUrl }}</span>
+                    </p>
+                  }
+                  <p class="text-xs text-ink-muted">
+                    {{ formatDate(banner.startsAt) }} – {{ formatDate(banner.endsAt) }}
+                  </p>
+
+                  <div class="flex flex-wrap items-center gap-2 pt-1">
+                    <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" [disabled]="busyId() === banner.id" (click)="openEdit(banner)">
+                      <app-icon name="edit" [size]="14" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      class="ox-btn ox-btn--ghost ox-btn--sm"
+                      [disabled]="first || busyId() === banner.id"
+                      aria-label="Move banner up"
+                      (click)="move(banner, -1)"
+                    >
+                      <app-icon name="chevron-left" [size]="14" />
+                      Up
+                    </button>
+                    <button
+                      type="button"
+                      class="ox-btn ox-btn--ghost ox-btn--sm"
+                      [disabled]="last || busyId() === banner.id"
+                      aria-label="Move banner down"
+                      (click)="move(banner, 1)"
+                    >
+                      Down
+                      <app-icon name="chevron-right" [size]="14" />
+                    </button>
+                    <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" [disabled]="busyId() === banner.id" (click)="toggleActive(banner)">
+                      {{ banner.isActive ? 'Hide' : 'Show' }}
+                    </button>
+
+                    <span class="ml-auto flex items-center gap-2">
+                      @if (confirmingId() === banner.id) {
+                        <button type="button" class="ox-btn ox-btn--danger ox-btn--sm" [disabled]="busyId() === banner.id" (click)="remove(banner)">
+                          Confirm
+                        </button>
+                        <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" (click)="confirmingId.set(null)">Cancel</button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="ox-btn ox-btn--ghost ox-btn--sm text-rose"
+                          [attr.aria-label]="'Delete banner ' + banner.title"
+                          (click)="confirmingId.set(banner.id)"
+                        >
+                          <app-icon name="trash" [size]="14" />
+                        </button>
+                      }
+                    </span>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+</div>

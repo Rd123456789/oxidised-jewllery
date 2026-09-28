@@ -1,0 +1,326 @@
+<div class="ox-page">
+  <header class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div>
+      <p class="ox-eyebrow">Overview</p>
+      <h1 class="ox-page-title mt-1">Dashboard</h1>
+      <p class="mt-1 text-sm text-ink-muted">The last 30 days across the store.</p>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+      <a class="ox-btn ox-btn--primary ox-btn--sm" routerLink="/admin/products/new">
+        <app-icon name="plus" [size]="15" /> Add product
+      </a>
+      <a class="ox-btn ox-btn--outline ox-btn--sm" routerLink="/admin/orders">
+        <app-icon name="truck" [size]="15" /> View orders
+      </a>
+      <a class="ox-btn ox-btn--outline ox-btn--sm" routerLink="/admin/products" [queryParams]="{ status: 'out_of_stock' }">
+        <app-icon name="box" [size]="15" /> Manage inventory
+      </a>
+      <a class="ox-btn ox-btn--outline ox-btn--sm" routerLink="/admin/reviews">
+        <app-icon name="star" [size]="15" /> Moderate reviews
+        @if (stats(); as s) {
+          @if (s.reviews.pending > 0) {
+            <span class="ox-badge ox-badge--danger">{{ s.reviews.pending }}</span>
+          }
+        }
+      </a>
+    </div>
+  </header>
+
+  @if (loading() && !stats()) {
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      @for (row of [1, 2, 3, 4]; track row) {
+        <div class="ox-card p-5">
+          <div class="ox-skeleton h-4 w-24"></div>
+          <div class="ox-skeleton mt-4 h-8 w-32"></div>
+          <div class="ox-skeleton mt-3 h-3 w-40"></div>
+        </div>
+      }
+    </div>
+  } @else if (error() && !stats()) {
+    <div class="ox-card p-8 text-center">
+      <p class="text-sm text-rose">{{ error() }}</p>
+      <button type="button" class="ox-btn ox-btn--outline ox-btn--sm mt-4" (click)="load()">
+        <app-icon name="refresh" [size]="14" /> Retry
+      </button>
+    </div>
+  } @else if (stats(); as s) {
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <article class="ox-card p-5">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-ink-muted">Revenue</p>
+            <p class="ox-display mt-2 text-3xl text-ink">
+              {{ formatCurrency(s.revenue.total, s.revenue.currency) }}
+            </p>
+            <p class="mt-1 text-xs text-ink-muted">
+              Avg order {{ formatCurrency(s.revenue.averageOrderValue, s.revenue.currency) }}
+            </p>
+          </div>
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brass/10 text-brass">
+            <app-icon name="tag" [size]="18" />
+          </span>
+        </div>
+      </article>
+
+      <article class="ox-card p-5">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-ink-muted">Orders</p>
+            <p class="ox-display mt-2 text-3xl text-ink">{{ s.orders.total }}</p>
+            <p class="mt-1 text-xs text-ink-muted">{{ s.orders.pending }} pending</p>
+          </div>
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brass/10 text-brass">
+            <app-icon name="truck" [size]="18" />
+          </span>
+        </div>
+      </article>
+
+      <article class="ox-card p-5">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-ink-muted">Customers</p>
+            <p class="ox-display mt-2 text-3xl text-ink">{{ s.customers.total }}</p>
+            <p class="mt-1 text-xs text-ink-muted">+{{ s.customers.newInRange }} in range</p>
+          </div>
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brass/10 text-brass">
+            <app-icon name="users" [size]="18" />
+          </span>
+        </div>
+      </article>
+
+      <article class="ox-card p-5">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-ink-muted">Catalogue</p>
+            <p class="ox-display mt-2 text-3xl text-ink">{{ s.catalogue.products }}</p>
+            <p class="mt-1 text-xs text-ink-muted">
+              {{ s.catalogue.lowStock }} low · {{ s.catalogue.outOfStock }} out of stock
+            </p>
+          </div>
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brass/10 text-brass">
+            <app-icon name="box" [size]="18" />
+          </span>
+        </div>
+      </article>
+    </div>
+
+    @defer (on viewport) {
+      <section class="ox-card p-4 sm:p-5 ox-reveal">
+        <div class="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 class="ox-display text-lg text-ink">Revenue by day</h2>
+            <p class="text-xs text-ink-muted">Sales over the last 30 days</p>
+          </div>
+          <p class="text-xs text-ink-muted">
+            Peak {{ formatCurrency(maxRevenue() === 1 ? 0 : maxRevenue(), s.revenue.currency) }}
+          </p>
+        </div>
+
+        @if (s.salesSeries.length === 0) {
+          <p class="py-10 text-center text-sm text-ink-muted">No sales recorded in this period.</p>
+        } @else {
+          <div class="mt-5 flex h-44 items-end gap-1">
+            @for (point of s.salesSeries; track point.date; let index = $index) {
+              <div class="flex h-full flex-1 flex-col items-center justify-end gap-1">
+                <div
+                  class="w-full rounded-t bg-brass/70 transition hover:bg-brass"
+                  [style.height.%]="barPercent(point.revenue)"
+                  [title]="formatDate(point.date) + ' · ' + formatCurrency(point.revenue, s.revenue.currency) + ' · ' + point.orders + ' orders'"
+                ></div>
+                @if (showLabel(index)) {
+                  <span class="hidden text-[10px] text-ink-muted sm:block">{{ formatDate(point.date) }}</span>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+    } @placeholder (minimum 300ms) {
+      <div class="ox-skeleton h-56 rounded-2xl"></div>
+    } @loading (minimum 200ms) {
+      <div class="grid place-items-center py-10"><span class="ox-spinner"></span></div>
+    } @error {
+      <p class="text-sm text-ink-soft">Could not load the sales chart.</p>
+    }
+
+    <section class="ox-card p-4 sm:p-5">
+      <h2 class="ox-display text-lg text-ink">Orders by status</h2>
+      @if (s.orders.byStatus.length === 0) {
+        <p class="mt-3 text-sm text-ink-muted">No orders yet.</p>
+      } @else {
+        <div class="mt-4 space-y-3">
+          @for (entry of s.orders.byStatus; track entry.status) {
+            <div class="flex items-center gap-3">
+              <span class="w-28 shrink-0 text-xs font-semibold text-ink-soft">
+                {{ titleCase(entry.status) }}
+              </span>
+              <span class="h-2 flex-1 overflow-hidden rounded-full bg-sand">
+                <span class="block h-full rounded-full bg-brass" [style.width.%]="statusWidth(entry.count)"></span>
+              </span>
+              <span class="w-10 shrink-0 text-right text-sm font-semibold text-ink">{{ entry.count }}</span>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <div class="grid gap-6 xl:grid-cols-2">
+      <section class="ox-card overflow-hidden">
+        <div class="flex items-center justify-between border-b border-sand-deep/60 px-4 py-3">
+          <h2 class="ox-display text-lg text-ink">Recent orders</h2>
+          <a class="text-xs font-semibold text-brass hover:text-brass-deep" routerLink="/admin/orders">
+            View all
+          </a>
+        </div>
+
+        @if (s.recentOrders.length === 0) {
+          <p class="px-4 py-10 text-center text-sm text-ink-muted">No orders yet.</p>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[32rem] text-sm">
+              <thead>
+                <tr class="bg-sand/60 text-xs uppercase tracking-wide text-ink-muted">
+                  <th class="px-4 py-2.5 text-left font-semibold">Order</th>
+                  <th class="px-4 py-2.5 text-left font-semibold">Customer</th>
+                  <th class="px-4 py-2.5 text-left font-semibold">Total</th>
+                  <th class="px-4 py-2.5 text-left font-semibold">Status</th>
+                  <th class="px-4 py-2.5 text-left font-semibold">Placed</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (order of s.recentOrders; track order.id) {
+                  <tr class="border-t border-sand-deep/50 hover:bg-sand/30">
+                    <td class="px-4 py-3">
+                      <a class="font-semibold text-brass hover:text-brass-deep" [routerLink]="['/admin/orders', order.orderNumber]">
+                        {{ order.orderNumber }}
+                      </a>
+                    </td>
+                    <td class="px-4 py-3 text-ink-soft">{{ order.customerName }}</td>
+                    <td class="px-4 py-3 font-semibold text-ink">
+                      {{ formatCurrency(order.pricing.total, order.pricing.currency) }}
+                    </td>
+                    <td class="px-4 py-3">
+                      <app-status-badge [label]="titleCase(order.status)" [tone]="orderStatusTone(order.status)" />
+                    </td>
+                    <td class="px-4 py-3 text-ink-muted">{{ relativeTime(order.createdAt) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      <section class="ox-card overflow-hidden">
+        <div class="flex items-center justify-between border-b border-sand-deep/60 px-4 py-3">
+          <h2 class="ox-display text-lg text-ink">Top products</h2>
+          <a class="text-xs font-semibold text-brass hover:text-brass-deep" routerLink="/admin/products">
+            View all
+          </a>
+        </div>
+
+        @if (s.topProducts.length === 0) {
+          <p class="px-4 py-10 text-center text-sm text-ink-muted">No product sales yet.</p>
+        } @else {
+          <ul class="divide-y divide-sand-deep/50">
+              @for (product of s.topProducts; track product.id) {
+              <li class="flex items-center gap-3 px-4 py-3 hover:bg-sand/30">
+                @if (product.image) {
+                  <img [src]="product.image" [alt]="product.name" class="h-11 w-11 rounded-lg object-cover" loading="lazy" />
+                } @else {
+                  <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-sand text-ink-muted">
+                    <app-icon name="box" [size]="18" />
+                  </span>
+                }
+                <div class="min-w-0 flex-1">
+                  <a class="block truncate text-sm font-semibold text-ink hover:text-brass"                         [routerLink]="['/admin/products', product.id, 'edit']">
+                    {{ product.name }}
+                  </a>
+                  <p class="text-xs text-ink-muted">{{ product.quantity }} sold</p>
+                </div>
+                <span class="text-sm font-semibold text-ink">
+                  {{ formatCurrency(product.revenue, s.revenue.currency) }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+  }
+
+  @defer (on viewport) {
+    <section class="ox-card overflow-hidden ox-reveal">
+      <div class="flex items-center justify-between border-b border-sand-deep/60 px-4 py-3">
+        <div>
+          <h2 class="ox-display text-lg text-ink">Low stock inventory</h2>
+          <p class="text-xs text-ink-muted">Items at or below their threshold</p>
+        </div>
+        <a class="text-xs font-semibold text-brass hover:text-brass-deep" routerLink="/admin/products">
+          Manage
+        </a>
+      </div>
+
+      @if (inventory().length === 0) {
+        <div class="p-4">
+          <app-empty-state
+            title="Inventory is healthy"
+            message="No products are running low right now."
+            icon="box"
+          />
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[40rem] text-sm">
+            <thead>
+              <tr class="bg-sand/60 text-xs uppercase tracking-wide text-ink-muted">
+                <th class="px-4 py-2.5 text-left font-semibold">Product</th>
+                <th class="px-4 py-2.5 text-left font-semibold">SKU</th>
+                <th class="px-4 py-2.5 text-left font-semibold">Stock</th>
+                <th class="px-4 py-2.5 text-left font-semibold">Threshold</th>
+                <th class="px-4 py-2.5 text-left font-semibold">Status</th>
+                <th class="px-4 py-2.5 text-right font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of inventory(); track row.id) {
+                <tr class="border-t border-sand-deep/50 hover:bg-sand/30">
+                  <td class="px-4 py-3">
+                    <p class="font-semibold text-ink">{{ row.name }}</p>
+                    @if (row.category) {
+                      <p class="text-xs text-ink-muted">{{ row.category.name }}</p>
+                    }
+                  </td>
+                  <td class="px-4 py-3 text-ink-muted">{{ row.sku }}</td>
+                  <td class="px-4 py-3 font-semibold" [class.text-rose]="row.stock === 0" [class.text-brass]="row.stock !== 0">
+                    {{ row.stock }}
+                  </td>
+                  <td class="px-4 py-3 text-ink-soft">{{ row.lowStockThreshold }}</td>
+                  <td class="px-4 py-3">
+                    @if (row.stock === 0) {
+                      <span class="ox-badge ox-badge--danger">Out of stock</span>
+                    } @else {
+                      <span class="ox-badge ox-badge--progress">Low stock</span>
+                    }
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <a class="ox-btn ox-btn--outline ox-btn--sm" [routerLink]="['/admin/products', row.id, 'edit']">
+                      <app-icon name="edit" [size]="13" /> Edit
+                    </a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  } @placeholder (minimum 300ms) {
+    <div class="ox-skeleton h-48 rounded-2xl"></div>
+  } @loading (minimum 200ms) {
+    <div class="grid place-items-center py-10"><span class="ox-spinner"></span></div>
+  } @error {
+    <p class="text-sm text-ink-soft">Could not load the inventory table.</p>
+  }
+</div>

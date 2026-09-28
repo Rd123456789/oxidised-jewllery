@@ -1,0 +1,318 @@
+<div class="space-y-6">
+  <header class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+    <div>
+      <p class="ox-eyebrow">Saved places</p>
+      <h1 class="ox-page-title mt-1">Addresses</h1>
+      <p class="mt-1 text-sm text-ink-soft">
+        {{ addresses().length }} saved {{ addresses().length === 1 ? 'address' : 'addresses' }}.
+      </p>
+    </div>
+
+    @if (!showForm()) {
+      <button type="button" class="ox-btn ox-btn--primary w-full sm:w-auto" (click)="startAdd()">
+        <app-icon name="plus" [size]="15" />
+        Add address
+      </button>
+    }
+  </header>
+
+  @if (showForm()) {
+    <section class="ox-card p-6">
+      <h2 class="ox-display text-xl text-ink">
+        {{ editingId() ? 'Edit address' : 'Add a new address' }}
+      </h2>
+
+      <form class="mt-5 space-y-4" (ngSubmit)="save()" novalidate>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="ox-label" for="address-full-name">Full name</label>
+            <input
+              id="address-full-name"
+              name="fullName"
+              type="text"
+              class="ox-input"
+              autocomplete="name"
+              [ngModel]="form().fullName"
+              (ngModelChange)="update('fullName', $event)"
+              [attr.aria-invalid]="formErrors()['fullName'] ? 'true' : null"
+            />
+            @if (formErrors()['fullName']; as message) {
+              <p class="ox-field-error">{{ message }}</p>
+            }
+          </div>
+
+          <div>
+            <label class="ox-label" for="address-phone">Phone</label>
+            <input
+              id="address-phone"
+              name="phone"
+              type="tel"
+              class="ox-input"
+              autocomplete="tel"
+              [ngModel]="form().phone"
+              (ngModelChange)="update('phone', $event)"
+              [attr.aria-invalid]="formErrors()['phone'] ? 'true' : null"
+            />
+            @if (formErrors()['phone']; as message) {
+              <p class="ox-field-error">{{ message }}</p>
+            }
+          </div>
+        </div>
+
+        <div>
+          <label class="ox-label" for="address-label">Label (optional)</label>
+          <input
+            id="address-label"
+            name="label"
+            type="text"
+            class="ox-input"
+            placeholder="Home, Office…"
+            [ngModel]="form().label"
+            (ngModelChange)="update('label', $event)"
+          />
+        </div>
+
+        <div>
+          <label class="ox-label" for="address-line1">Address line 1</label>
+          <input
+            id="address-line1"
+            name="line1"
+            type="text"
+            class="ox-input"
+            autocomplete="address-line1"
+            [ngModel]="form().line1"
+            (ngModelChange)="update('line1', $event)"
+            [attr.aria-invalid]="formErrors()['line1'] ? 'true' : null"
+          />
+          @if (formErrors()['line1']; as message) {
+            <p class="ox-field-error">{{ message }}</p>
+          }
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="ox-label" for="address-line2">Address line 2 (optional)</label>
+            <input
+              id="address-line2"
+              name="line2"
+              type="text"
+              class="ox-input"
+              autocomplete="address-line2"
+              [ngModel]="form().line2"
+              (ngModelChange)="update('line2', $event)"
+            />
+          </div>
+
+          <div>
+            <label class="ox-label" for="address-landmark">Landmark (optional)</label>
+            <input
+              id="address-landmark"
+              name="landmark"
+              type="text"
+              class="ox-input"
+              [ngModel]="form().landmark"
+              (ngModelChange)="update('landmark', $event)"
+            />
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label class="ox-label" for="address-city">City</label>
+            <input
+              id="address-city"
+              name="city"
+              type="text"
+              class="ox-input"
+              autocomplete="address-level2"
+              [ngModel]="form().city"
+              (ngModelChange)="update('city', $event)"
+              [attr.aria-invalid]="formErrors()['city'] ? 'true' : null"
+            />
+            @if (formErrors()['city']; as message) {
+              <p class="ox-field-error">{{ message }}</p>
+            }
+          </div>
+
+          <div>
+            <label class="ox-label" for="address-state">State</label>
+            <input
+              id="address-state"
+              name="state"
+              type="text"
+              class="ox-input"
+              autocomplete="address-level1"
+              [ngModel]="form().state"
+              (ngModelChange)="update('state', $event)"
+              [attr.aria-invalid]="formErrors()['state'] ? 'true' : null"
+            />
+            @if (formErrors()['state']; as message) {
+              <p class="ox-field-error">{{ message }}</p>
+            }
+          </div>
+
+          <div>
+            <label class="ox-label" for="address-pincode">Pincode</label>
+            <input
+              id="address-pincode"
+              name="pincode"
+              type="text"
+              inputmode="numeric"
+              class="ox-input"
+              autocomplete="postal-code"
+              [ngModel]="form().pincode"
+              (ngModelChange)="update('pincode', $event)"
+              [attr.aria-invalid]="formErrors()['pincode'] ? 'true' : null"
+            />
+            @if (formErrors()['pincode']; as message) {
+              <p class="ox-field-error">{{ message }}</p>
+            }
+          </div>
+        </div>
+
+        <div>
+          <label class="ox-label" for="address-country">Country</label>
+          <input
+            id="address-country"
+            name="country"
+            type="text"
+            class="ox-input sm:w-64"
+            autocomplete="country-name"
+            [ngModel]="form().country"
+            (ngModelChange)="update('country', $event)"
+            [attr.aria-invalid]="formErrors()['country'] ? 'true' : null"
+          />
+          @if (formErrors()['country']; as message) {
+            <p class="ox-field-error">{{ message }}</p>
+          }
+        </div>
+
+        <label class="flex items-center gap-2 text-sm text-ink-soft" for="address-is-default">
+          <input
+            id="address-is-default"
+            name="isDefault"
+            type="checkbox"
+            class="ox-checkbox"
+            [ngModel]="form().isDefault"
+            (ngModelChange)="update('isDefault', $event)"
+          />
+          Use as my default delivery address
+        </label>
+
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <button
+            type="submit"
+            class="ox-btn ox-btn--primary w-full justify-center sm:w-auto"
+            [disabled]="saving()"
+          >
+            @if (saving()) {
+              <span class="ox-spinner"></span>
+              Saving…
+            } @else {
+              {{ editingId() ? 'Save changes' : 'Add address' }}
+            }
+          </button>
+          <button
+            type="button"
+            class="ox-btn ox-btn--ghost w-full justify-center sm:w-auto"
+            (click)="cancelForm()"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+
+  @if (addresses().length === 0) {
+    @if (!showForm()) {
+      <app-empty-state
+        title="No addresses yet"
+        message="Add a delivery address to speed up checkout next time."
+        icon="truck"
+      />
+    }
+  } @else {
+    <div class="grid gap-4 sm:grid-cols-2">
+      @for (address of addresses(); track address.id ?? address.line1) {
+        <article class="ox-card flex flex-col p-5">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              @if (address.label) {
+                <p class="ox-eyebrow">{{ address.label }}</p>
+              }
+              <p class="mt-1 font-semibold text-ink">{{ address.fullName }}</p>
+            </div>
+            @if (address.isDefault) {
+              <span class="ox-badge ox-badge--success">Default</span>
+            }
+          </div>
+
+          <address class="mt-3 flex-1 text-sm not-italic text-ink-soft">
+            <p>{{ address.line1 }}</p>
+            @if (address.line2) {
+              <p>{{ address.line2 }}</p>
+            }
+            @if (address.landmark) {
+              <p>{{ address.landmark }}</p>
+            }
+            <p>{{ address.city }}, {{ address.state }} {{ address.pincode }}</p>
+            <p>{{ address.country }}</p>
+            <p class="mt-2">{{ address.phone }}</p>
+          </address>
+
+          <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-sand-deep/60 pt-4">
+            @if (confirmingDelete() === address.id) {
+              <span class="text-xs text-ink-soft">Delete this address?</span>
+              <button
+                type="button"
+                class="ox-btn ox-btn--ghost ox-btn--sm ml-auto"
+                (click)="dismissDelete()"
+              >
+                Keep
+              </button>
+              <button
+                type="button"
+                class="ox-btn ox-btn--danger ox-btn--sm"
+                (click)="confirmDelete(address.id)"
+              >
+                Delete
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="ox-btn ox-btn--ghost ox-btn--sm"
+                (click)="startEdit(address)"
+              >
+                <app-icon name="edit" [size]="14" />
+                Edit
+              </button>
+
+              @if (!address.isDefault && address.id) {
+                <button
+                  type="button"
+                  class="ox-btn ox-btn--ghost ox-btn--sm"
+                  (click)="setDefault(address.id)"
+                >
+                  <app-icon name="check" [size]="14" />
+                  Set as default
+                </button>
+              }
+
+              @if (address.id) {
+                <button
+                  type="button"
+                  class="ox-btn ox-btn--ghost ox-btn--sm ml-auto text-rose"
+                  (click)="requestDelete(address.id)"
+                >
+                  <app-icon name="trash" [size]="14" />
+                  Delete
+                </button>
+              }
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</div>

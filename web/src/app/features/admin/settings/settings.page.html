@@ -1,0 +1,431 @@
+<div class="ox-page">
+  <div class="sticky top-16 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-sand-deep/60 bg-ivory/95 px-4 py-3 backdrop-blur lg:-mx-6 lg:px-6">
+    <div>
+      <h1 class="ox-page-title">Settings</h1>
+      <p class="mt-0.5 text-sm text-ink-soft">
+        @if (dirty()) {
+          <span class="inline-flex items-center gap-1 font-semibold text-brass">
+            <app-icon name="info" [size]="13" />
+            You have unsaved changes
+          </span>
+        } @else {
+          Store configuration and operations.
+        }
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" class="ox-btn ox-btn--outline" [disabled]="saving() || loading()" (click)="reset()">
+        <app-icon name="refresh" [size]="15" />
+        Reset
+      </button>
+      <button type="button" class="ox-btn ox-btn--primary" [disabled]="saving() || loading()" (click)="save()">
+        {{ saving() ? 'Saving…' : 'Save settings' }}
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="space-y-4">
+      @for (placeholder of [1, 2, 3]; track placeholder) {
+        <div class="ox-card p-4">
+          <div class="ox-skeleton h-5 w-40"></div>
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            @for (inner of [1, 2, 3, 4]; track inner) {
+              <div class="ox-skeleton h-10 w-full"></div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (failed()) {
+    <div class="ox-card flex flex-col items-center gap-3 px-6 py-12 text-center">
+      <span class="flex h-11 w-11 items-center justify-center rounded-full bg-rose/10 text-rose">
+        <app-icon name="alert" [size]="20" />
+      </span>
+      <p class="text-sm text-ink-soft">We could not load settings. Please try again.</p>
+      <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" (click)="reset()">Retry</button>
+    </div>
+  } @else {
+    <section class="ox-card p-4">
+      <h2 class="font-display text-lg text-ink">Store</h2>
+      <p class="mt-1 text-sm text-ink-muted">Identity and support contact details shown across the storefront.</p>
+
+      <div class="mt-4 grid gap-4 lg:grid-cols-3">
+        <div class="space-y-4 lg:col-span-2">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="ox-label" for="settings-store-name">Store name</label>
+              <input
+                id="settings-store-name"
+                type="text"
+                class="ox-input"
+                [ngModel]="settings().storeName"
+                (ngModelChange)="patch({ storeName: $event })"
+              />
+            </div>
+            <div>
+              <label class="ox-label" for="settings-tagline">Tagline</label>
+              <input
+                id="settings-tagline"
+                type="text"
+                class="ox-input"
+                [ngModel]="settings().tagline"
+                (ngModelChange)="patch({ tagline: $event })"
+              />
+            </div>
+            <div>
+              <label class="ox-label" for="settings-support-email">Support email</label>
+              <input
+                id="settings-support-email"
+                type="email"
+                class="ox-input"
+                [ngModel]="settings().supportEmail"
+                (ngModelChange)="patch({ supportEmail: $event })"
+              />
+            </div>
+            <div>
+              <label class="ox-label" for="settings-support-phone">Support phone</label>
+              <input
+                id="settings-support-phone"
+                type="text"
+                class="ox-input"
+                [ngModel]="settings().supportPhone"
+                (ngModelChange)="patch({ supportPhone: $event })"
+              />
+            </div>
+            <div>
+              <label class="ox-label" for="settings-whatsapp">WhatsApp number</label>
+              <input
+                id="settings-whatsapp"
+                type="text"
+                class="ox-input"
+                [ngModel]="settings().whatsappNumber"
+                (ngModelChange)="patch({ whatsappNumber: $event })"
+              />
+            </div>
+            <div>
+              <label class="ox-label" for="settings-gst">GST number</label>
+              <input
+                id="settings-gst"
+                type="text"
+                class="ox-input"
+                [ngModel]="settings().gstNumber"
+                (ngModelChange)="patch({ gstNumber: $event })"
+              />
+            </div>
+          </div>
+
+          <div>
+            <span class="ox-label">Address lines</span>
+            <div class="space-y-2">
+              @for (line of settings().addressLines; track $index) {
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    class="ox-input"
+                    [attr.aria-label]="'Address line ' + ($index + 1)"
+                    [ngModel]="line"
+                    (ngModelChange)="setAddressLine($index, $event)"
+                  />
+                  <button
+                    type="button"
+                    class="ox-btn ox-btn--ghost ox-btn--sm"
+                    [disabled]="settings().addressLines.length <= 1"
+                    [attr.aria-label]="'Remove address line ' + ($index + 1)"
+                    (click)="removeAddressLine($index)"
+                  >
+                    <app-icon name="trash" [size]="14" />
+                  </button>
+                </div>
+              }
+            </div>
+            <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm mt-2" (click)="addAddressLine()">
+              <app-icon name="plus" [size]="14" />
+              Add line
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <span class="ox-label">Logo</span>
+          <app-image-uploader [images]="logoImages()" folder="pages" [maxFiles]="1" (imagesChange)="setLogo($event)" />
+        </div>
+      </div>
+    </section>
+
+    <section class="ox-card p-4">
+      <h2 class="font-display text-lg text-ink">Commerce</h2>
+      <p class="mt-1 text-sm text-ink-muted">Pricing, tax and fulfilment rules.</p>
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div>
+          <label class="ox-label" for="settings-currency">Currency</label>
+          <input
+            id="settings-currency"
+            type="text"
+            maxlength="3"
+            class="ox-input uppercase"
+            [ngModel]="settings().currency"
+            (ngModelChange)="patch({ currency: $event.toUpperCase() })"
+          />
+          <p class="ox-help">Three-letter ISO code, e.g. INR.</p>
+        </div>
+        <div>
+          <label class="ox-label" for="settings-tax-percent">Tax percent</label>
+          <input
+            id="settings-tax-percent"
+            type="number"
+            min="0"
+            step="0.01"
+            class="ox-input"
+            [ngModel]="settings().taxPercent"
+            (ngModelChange)="patch({ taxPercent: $event })"
+          />
+        </div>
+        <div>
+          <label class="ox-label" for="settings-tax-label">Tax label</label>
+          <input
+            id="settings-tax-label"
+            type="text"
+            class="ox-input"
+            [ngModel]="settings().taxLabel"
+            (ngModelChange)="patch({ taxLabel: $event })"
+          />
+        </div>
+        <div>
+          <label class="ox-label" for="settings-shipping-flat">Shipping flat rate</label>
+          <input
+            id="settings-shipping-flat"
+            type="number"
+            min="0"
+            class="ox-input"
+            [ngModel]="settings().shippingFlatRate"
+            (ngModelChange)="patch({ shippingFlatRate: $event })"
+          />
+        </div>
+        <div>
+          <label class="ox-label" for="settings-free-shipping">Free shipping threshold</label>
+          <input
+            id="settings-free-shipping"
+            type="number"
+            min="0"
+            class="ox-input"
+            [ngModel]="settings().freeShippingThreshold"
+            (ngModelChange)="patch({ freeShippingThreshold: $event })"
+          />
+        </div>
+        <div>
+          <label class="ox-label" for="settings-cod-fee">COD fee</label>
+          <input
+            id="settings-cod-fee"
+            type="number"
+            min="0"
+            class="ox-input"
+            [ngModel]="settings().codFee"
+            (ngModelChange)="patch({ codFee: $event })"
+          />
+        </div>
+        <div>
+          <label class="ox-label" for="settings-min-order">Minimum order value</label>
+          <input
+            id="settings-min-order"
+            type="number"
+            min="0"
+            class="ox-input"
+            [ngModel]="settings().minOrderValue"
+            (ngModelChange)="patch({ minOrderValue: $event })"
+          />
+        </div>
+        <div>
+          <label class="ox-label" for="settings-returns-window">Returns window (days)</label>
+          <input
+            id="settings-returns-window"
+            type="number"
+            min="0"
+            class="ox-input"
+            [ngModel]="settings().returnsWindowDays"
+            (ngModelChange)="patch({ returnsWindowDays: $event })"
+          />
+        </div>
+        <div>
+          <label class="ox-label" for="settings-low-stock">Low stock threshold</label>
+          <input
+            id="settings-low-stock"
+            type="number"
+            min="0"
+            class="ox-input"
+            [ngModel]="settings().lowStockThreshold"
+            (ngModelChange)="patch({ lowStockThreshold: $event })"
+          />
+        </div>
+        <label class="flex items-center gap-2 self-end pb-2 text-sm text-ink-soft">
+          <input
+            type="checkbox"
+            class="ox-checkbox"
+            [ngModel]="settings().codEnabled"
+            (ngModelChange)="patch({ codEnabled: $event })"
+          />
+          Cash on delivery enabled
+        </label>
+      </div>
+    </section>
+
+    <section class="ox-card p-4">
+      <h2 class="font-display text-lg text-ink">Announcement</h2>
+      <p class="mt-1 text-sm text-ink-muted">Optional banner shown at the top of the storefront.</p>
+
+      <div class="mt-4 grid gap-4 lg:grid-cols-3">
+        <div class="lg:col-span-2">
+          <label class="ox-label" for="settings-announcement-text">Text</label>
+          <input
+            id="settings-announcement-text"
+            type="text"
+            class="ox-input"
+            [ngModel]="settings().announcement.text"
+            (ngModelChange)="patchAnnouncement({ text: $event })"
+          />
+        </div>
+        <div>
+          <label class="ox-label" for="settings-announcement-link">Link</label>
+          <input
+            id="settings-announcement-link"
+            type="text"
+            class="ox-input"
+            placeholder="/shop"
+            [ngModel]="settings().announcement.link"
+            (ngModelChange)="patchAnnouncement({ link: $event })"
+          />
+        </div>
+      </div>
+      <label class="mt-3 flex items-center gap-2 text-sm text-ink-soft">
+        <input
+          type="checkbox"
+          class="ox-checkbox"
+          [ngModel]="settings().announcement.isActive"
+          (ngModelChange)="patchAnnouncement({ isActive: $event })"
+        />
+        Show announcement bar
+      </label>
+    </section>
+
+    <section class="ox-card p-4">
+      <h2 class="font-display text-lg text-ink">Social</h2>
+      <p class="mt-1 text-sm text-ink-muted">Links used in the footer and contact sections.</p>
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <label class="ox-label" for="settings-instagram">Instagram</label>
+          <input
+            id="settings-instagram"
+            type="url"
+            class="ox-input"
+            [ngModel]="settings().social.instagram"
+            (ngModelChange)="patchSocial({ instagram: $event })"
+          />
+        </div>
+        <div>
+          <label class="ox-label" for="settings-facebook">Facebook</label>
+          <input
+            id="settings-facebook"
+            type="url"
+            class="ox-input"
+            [ngModel]="settings().social.facebook"
+            (ngModelChange)="patchSocial({ facebook: $event })"
+          />
+        </div>
+        <div>
+          <label class="ox-label" for="settings-pinterest">Pinterest</label>
+          <input
+            id="settings-pinterest"
+            type="url"
+            class="ox-input"
+            [ngModel]="settings().social.pinterest"
+            (ngModelChange)="patchSocial({ pinterest: $event })"
+          />
+        </div>
+        <div>
+          <label class="ox-label" for="settings-youtube">YouTube</label>
+          <input
+            id="settings-youtube"
+            type="url"
+            class="ox-input"
+            [ngModel]="settings().social.youtube"
+            (ngModelChange)="patchSocial({ youtube: $event })"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="ox-card border-rose/40 p-4">
+      <h2 class="font-display text-lg text-rose">Danger zone</h2>
+      <p class="mt-1 text-sm text-ink-muted">Use with care — these changes affect the live storefront.</p>
+
+      <label class="mt-4 flex items-start gap-3 text-sm">
+        <input
+          type="checkbox"
+          class="ox-checkbox mt-0.5"
+          [ngModel]="settings().maintenanceMode"
+          (ngModelChange)="patch({ maintenanceMode: $event })"
+        />
+        <span>
+          <span class="block font-semibold text-ink">Maintenance mode</span>
+          <span class="block text-ink-soft">
+            The storefront will show a maintenance notice and customers cannot place new orders.
+          </span>
+        </span>
+      </label>
+    </section>
+  }
+
+  <section class="ox-card p-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <h2 class="font-display text-lg text-ink">Newsletter subscribers</h2>
+        <p class="mt-1 text-sm text-ink-muted">
+          {{ subscriberTotal() }} total · showing the 10 most recent.
+        </p>
+      </div>
+      <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" [disabled]="subscribersLoading()" (click)="reset()">
+        <app-icon name="refresh" [size]="14" />
+        Refresh
+      </button>
+    </div>
+
+    @if (subscribersLoading()) {
+      <div class="mt-4 space-y-2">
+        @for (placeholder of [1, 2, 3]; track placeholder) {
+          <div class="ox-skeleton h-10 w-full"></div>
+        }
+      </div>
+    } @else if (subscribers().length === 0) {
+      <p class="mt-4 text-sm text-ink-muted">No subscribers yet.</p>
+    } @else {
+      <ul class="mt-4 divide-y divide-sand-deep/50">
+        @for (subscriber of subscribers(); track subscriber.id) {
+          <li class="flex flex-wrap items-center justify-between gap-3 py-2 text-sm">
+            <span class="font-medium text-ink">{{ subscriber.email }}</span>
+            <span class="text-xs text-ink-muted">{{ formatDate(subscriber.createdAt) }}</span>
+            @if (subscriber.source) {
+              <span class="ox-badge ox-badge--neutral">{{ subscriber.source }}</span>
+            }
+            <span class="ml-auto flex items-center gap-2">
+              @if (confirmingSubscriberId() === subscriber.id) {
+                <button type="button" class="ox-btn ox-btn--danger ox-btn--sm" (click)="deleteSubscriber(subscriber)">Confirm</button>
+                <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" (click)="confirmingSubscriberId.set(null)">Cancel</button>
+              } @else {
+                <button
+                  type="button"
+                  class="ox-btn ox-btn--ghost ox-btn--sm text-rose"
+                  [attr.aria-label]="'Remove subscriber ' + subscriber.email"
+                  (click)="confirmingSubscriberId.set(subscriber.id)"
+                >
+                  <app-icon name="trash" [size]="14" />
+                </button>
+              }
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>

@@ -1,0 +1,423 @@
+<div class="flex min-h-screen flex-col">
+  <a
+    href="#main-content"
+    class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-ink focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-ivory"
+  >
+    Skip to content
+  </a>
+
+  @if (announcement(); as notice) {
+    <div class="bg-ink px-4 py-2 text-center text-xs tracking-wide text-ivory">
+      @if (notice.link) {
+        <a [routerLink]="notice.link" class="underline decoration-brass-soft underline-offset-4">
+          {{ notice.text }}
+        </a>
+      } @else {
+        {{ notice.text }}
+      }
+    </div>
+  }
+
+  <header
+    class="sticky top-0 z-40 border-b border-sand-deep/70 bg-ivory/95 backdrop-blur [view-transition-name:site-header]"
+  >
+    <div class="ox-container flex h-16 items-center justify-between gap-4">
+      <button
+        type="button"
+        class="lg:hidden"
+        aria-label="Open menu"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="toggleMenu()"
+      >
+        <app-icon name="menu" [size]="22" />
+      </button>
+
+      <a routerLink="/" class="flex items-center gap-2" (click)="closeMenu()">
+        @if (settings()?.logo?.url; as logo) {
+          <img [src]="logo" [alt]="storeName()" class="h-9 w-auto" />
+        } @else {
+          <span class="font-display text-xl font-semibold tracking-tight text-ink">
+            {{ storeName() }}
+          </span>
+        }
+      </a>
+
+      <nav class="hidden items-center gap-7 text-sm text-ink-soft lg:flex">
+        <a
+          routerLink="/shop"
+          routerLinkActive="text-brass"
+          ariaCurrentWhenActive="page"
+          class="hover:text-brass"
+        >
+          Shop all
+        </a>
+        <a
+          routerLink="/collections"
+          routerLinkActive="text-brass"
+          ariaCurrentWhenActive="page"
+          class="hover:text-brass"
+        >
+          Collections
+        </a>
+        <div class="relative">
+          <button
+            type="button"
+            class="flex items-center gap-1 hover:text-brass"
+            aria-haspopup="true"
+            [attr.aria-expanded]="categoriesOpen()"
+            (click)="categoriesOpen.update((open) => !open)"
+          >
+            Categories
+            <app-icon name="chevron-down" [size]="14" />
+          </button>
+          @if (categoriesOpen()) {
+            <div class="ox-slide-down absolute left-0 top-full z-50 mt-3 w-60 ox-card p-2">
+              @for (category of categories(); track category.id) {
+                <a
+                  [routerLink]="['/shop']"
+                  [queryParams]="{ category: category.slug }"
+                  class="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-ink-soft hover:bg-sand/60 hover:text-ink"
+                  (click)="categoriesOpen.set(false)"
+                >
+                  {{ category.name }}
+                  <span class="text-xs text-ink-muted">{{ category.productCount }}</span>
+                </a>
+              }
+            </div>
+          }
+        </div>
+        <a routerLink="/track-order" routerLinkActive="text-brass" ariaCurrentWhenActive="page" class="hover:text-brass">
+          Track order
+        </a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <div class="hidden items-center md:flex">
+          <app-search-autocomplete variant="header" />
+        </div>
+
+        @if (session.isAuthenticated()) {
+          <div class="relative">
+            <button
+              type="button"
+              class="flex items-center gap-1.5 text-ink-soft hover:text-brass"
+              (click)="accountOpen.update((open) => !open)"
+            >
+              <app-icon name="user" [size]="20" />
+              <span class="hidden text-xs xl:inline">{{ session.displayName() }}</span>
+            </button>
+            @if (accountOpen()) {
+              <div class="ox-slide-down absolute right-0 top-full z-50 mt-3 w-56 ox-card p-2 text-sm">
+                <a routerLink="/account" class="block rounded-lg px-3 py-2 hover:bg-sand/60" (click)="accountOpen.set(false)">My profile</a>
+                <a routerLink="/account/orders" class="block rounded-lg px-3 py-2 hover:bg-sand/60" (click)="accountOpen.set(false)">My orders</a>
+                <a routerLink="/wishlist" class="block rounded-lg px-3 py-2 hover:bg-sand/60" (click)="accountOpen.set(false)">Wishlist</a>
+                @if (session.isAdmin()) {
+                  <a routerLink="/admin" class="block rounded-lg px-3 py-2 hover:bg-sand/60" (click)="accountOpen.set(false)">Admin panel</a>
+                }
+                <button
+                  type="button"
+                  class="block w-full rounded-lg px-3 py-2 text-left text-rose hover:bg-rose/5"
+                  (click)="signOut()"
+                >
+                  Sign out
+                </button>
+              </div>
+            }
+          </div>
+        } @else {
+          <a routerLink="/login" class="text-ink-soft hover:text-brass" aria-label="Sign in">
+            <app-icon name="user" [size]="20" />
+          </a>
+        }
+
+        <a
+          routerLink="/wishlist"
+          class="relative hidden text-ink-soft hover:text-brass sm:block"
+          aria-label="Wishlist"
+        >
+          <app-icon name="heart" [size]="20" />
+          @if (wishlist.count() > 0) {
+            <span
+              class="ox-pop absolute -right-2 -top-2 flex h-4.5 min-w-[1.125rem] items-center justify-center rounded-full bg-rose px-1 text-[0.625rem] font-semibold text-white"
+            >
+              {{ wishlist.count() }}
+            </span>
+          }
+        </a>
+
+        <button
+          type="button"
+          class="relative text-ink-soft hover:text-brass"
+          aria-label="Open shopping bag"
+          [attr.aria-expanded]="miniCartOpen()"
+          (click)="toggleMiniCart()"
+        >
+          <app-icon name="bag" [size]="20" />
+          @if (cartCount() > 0) {
+            <span
+              class="ox-pop absolute -right-2 -top-2 flex h-4.5 min-w-[1.125rem] items-center justify-center rounded-full bg-brass px-1 text-[0.625rem] font-semibold text-white"
+            >
+              {{ cartCount() }}
+            </span>
+          }
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" tabindex="-1" class="flex-1">
+    <router-outlet />
+  </main>
+
+  <footer class="mt-16 border-t border-sand-deep/70 bg-paper">
+    <div class="ox-container grid gap-10 py-12 md:grid-cols-2 lg:grid-cols-4">
+      <div class="space-y-4">
+        <h3 class="font-display text-lg text-ink">{{ storeName() }}</h3>
+        <p class="text-sm leading-relaxed text-ink-soft">
+          {{ settings()?.tagline ?? 'Handcrafted oxidised jewellery, made in small batches.' }}
+        </p>
+        <div class="flex gap-2">
+          @if (settings()?.social?.instagram) {
+            <a [href]="settings()!.social.instagram" target="_blank" rel="noopener" class="ox-btn ox-btn--outline ox-btn--sm" aria-label="Instagram">
+              <app-icon name="instagram" [size]="15" />
+            </a>
+          }
+          @if (settings()?.social?.facebook) {
+            <a [href]="settings()!.social.facebook" target="_blank" rel="noopener" class="ox-btn ox-btn--outline ox-btn--sm" aria-label="Facebook">
+              <app-icon name="facebook" [size]="15" />
+            </a>
+          }
+          @if (settings()?.social?.pinterest) {
+            <a [href]="settings()!.social.pinterest" target="_blank" rel="noopener" class="ox-btn ox-btn--outline ox-btn--sm" aria-label="Pinterest">
+              <app-icon name="pinterest" [size]="15" />
+            </a>
+          }
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <h4 class="ox-eyebrow">Shop</h4>
+        <ul class="space-y-2 text-sm text-ink-soft">
+          @for (category of categories(); track category.id) {
+            <li>
+              <a [routerLink]="['/shop']" [queryParams]="{ category: category.slug }" class="hover:text-brass">
+                {{ category.name }}
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <div class="space-y-3">
+        <h4 class="ox-eyebrow">Help</h4>
+        <ul class="space-y-2 text-sm text-ink-soft">
+          @for (page of footerPages(); track page.id) {
+            <li>
+              <a [routerLink]="['/pages', page.slug]" class="hover:text-brass">{{ page.title }}</a>
+            </li>
+          }
+          <li><a routerLink="/track-order" class="hover:text-brass">Track your order</a></li>
+        </ul>
+      </div>
+
+      <div class="space-y-4">
+        <h4 class="ox-eyebrow">Join the list</h4>
+        <p class="text-sm text-ink-soft">
+          New drops, festive edits and early access — no more than twice a month.
+        </p>
+        <form class="flex gap-2" (submit)="subscribe($event)">
+          <input
+            class="ox-input"
+            type="email"
+            name="newsletterEmail"
+            required
+            aria-label="Your email address for the newsletter"
+            placeholder="you@email.com"
+            [value]="newsletterEmail()"
+            (input)="newsletterEmail.set($any($event.target).value)"
+          />
+          <button class="ox-btn ox-btn--primary" type="submit" [disabled]="subscribing()">
+            {{ subscribing() ? '…' : 'Join' }}
+          </button>
+        </form>
+        @if (settings()?.supportEmail; as email) {
+          <p class="text-xs text-ink-muted">
+            Need help? <a class="underline" [href]="'mailto:' + email">{{ email }}</a>
+          </p>
+        }
+      </div>
+    </div>
+
+    <div class="border-t border-sand-deep/70">
+      <div class="ox-container flex flex-col items-center justify-between gap-3 py-5 text-xs text-ink-muted sm:flex-row">
+        <p>© {{ year }} {{ storeName() }}. All rights reserved.</p>
+        <p class="flex items-center gap-4">
+          <span class="inline-flex items-center gap-1.5">
+            <app-icon name="truck" [size]="14" /> Free shipping over ₹999
+          </span>
+          <span class="inline-flex items-center gap-1.5">
+            <app-icon name="shield" [size]="14" /> Secure checkout
+          </span>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Mobile navigation drawer: slides in from the left over a dimmed backdrop. -->
+  <div
+    class="fixed inset-0 z-50 lg:hidden"
+    [class.pointer-events-none]="!menuOpen()"
+    [attr.aria-hidden]="!menuOpen()"
+    [attr.inert]="menuOpen() ? null : ''"
+  >
+    <div
+      class="absolute inset-0 bg-ink/45 backdrop-blur-sm transition-opacity duration-300 ease-out"
+      [style.opacity]="menuOpen() ? '1' : '0'"
+      [style.pointer-events]="menuOpen() ? 'auto' : 'none'"
+      (click)="closeMenu()"
+    ></div>
+
+    <aside
+      #drawerPanel
+      class="absolute left-0 top-0 flex h-full w-[82%] max-w-xs flex-col bg-ivory shadow-2xl transition-transform duration-300 ease-out"
+      [style.transform]="menuOpen() ? 'translateX(0)' : 'translateX(-100%)'"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Menu"
+      (keydown)="onDrawerKeydown($event)"
+    >
+      <div class="flex h-16 shrink-0 items-center justify-between border-b border-sand-deep/70 px-4">
+        <span class="font-display text-lg font-semibold tracking-tight text-ink">
+          {{ storeName() }}
+        </span>
+        <button
+          type="button"
+          class="rounded-full p-2 text-ink-soft active:bg-sand"
+          aria-label="Close menu"
+          (click)="closeMenu()"
+        >
+          <app-icon name="close" [size]="20" />
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-4 py-4">
+        <div class="mb-5">
+          <app-search-autocomplete variant="panel" />
+        </div>
+
+        <nav class="space-y-1 text-sm">
+          <a
+            routerLink="/shop"
+            routerLinkActive="bg-sand/70 text-ink"
+            ariaCurrentWhenActive="page"
+            class="block rounded-lg px-3 py-2.5 text-ink active:bg-sand/70"
+            (click)="closeMenu()"
+          >
+            Shop all
+          </a>
+          <a
+            routerLink="/collections"
+            routerLinkActive="bg-sand/70 text-ink"
+            ariaCurrentWhenActive="page"
+            class="block rounded-lg px-3 py-2.5 text-ink active:bg-sand/70"
+            (click)="closeMenu()"
+          >
+            Collections
+          </a>
+          <a
+            routerLink="/track-order"
+            routerLinkActive="bg-sand/70 text-ink"
+            ariaCurrentWhenActive="page"
+            class="block rounded-lg px-3 py-2.5 text-ink active:bg-sand/70"
+            (click)="closeMenu()"
+          >
+            Track order
+          </a>
+        </nav>
+
+        <p class="ox-eyebrow mt-6 px-3">Categories</p>
+        <nav class="mt-1 space-y-1 text-sm">
+          @for (category of categories(); track category.id) {
+            <a
+              [routerLink]="['/shop']"
+              [queryParams]="{ category: category.slug }"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-ink-soft active:bg-sand/70"
+              (click)="closeMenu()"
+            >
+              {{ category.name }}
+              <span class="text-xs text-ink-muted">{{ category.productCount }}</span>
+            </a>
+          }
+        </nav>
+
+        <div class="mt-6 border-t border-sand-deep/70 pt-4">
+          @if (session.isAuthenticated()) {
+            <a
+              routerLink="/account"
+              class="flex items-center gap-3 rounded-xl bg-sand/60 px-3 py-3 active:bg-sand"
+              (click)="closeMenu()"
+            >
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brass/10 text-brass">
+                <app-icon name="user" [size]="18" />
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-sm font-semibold text-ink">
+                  {{ session.displayName() }}
+                </span>
+                <span class="block truncate text-xs text-ink-muted">View profile</span>
+              </span>
+              <app-icon name="chevron-right" [size]="16" class="text-ink-muted" />
+            </a>
+
+            <nav class="mt-3 space-y-0.5 text-sm">
+              <a
+                routerLink="/account/orders"
+                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-ink-soft active:bg-sand/70"
+                (click)="closeMenu()"
+              >
+                <app-icon name="box" [size]="17" />
+                <span class="flex-1">My orders</span>
+                <app-icon name="chevron-right" [size]="14" class="text-ink-muted" />
+              </a>
+              <a
+                routerLink="/wishlist"
+                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-ink-soft active:bg-sand/70"
+                (click)="closeMenu()"
+              >
+                <app-icon name="heart" [size]="17" />
+                <span class="flex-1">Wishlist</span>
+                <app-icon name="chevron-right" [size]="14" class="text-ink-muted" />
+              </a>
+              @if (session.isAdmin()) {
+                <a
+                  routerLink="/admin"
+                  class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-ink-soft active:bg-sand/70"
+                  (click)="closeMenu()"
+                >
+                  <app-icon name="dashboard" [size]="17" />
+                  <span class="flex-1">Admin panel</span>
+                  <app-icon name="chevron-right" [size]="14" class="text-ink-muted" />
+                </a>
+              }
+            </nav>
+
+            <button
+              type="button"
+              class="mt-2 flex w-full items-center gap-3 border-t border-sand-deep/70 px-3 pb-2 pt-3 text-left text-sm text-rose active:bg-rose/5"
+              (click)="signOut()"
+            >
+              <app-icon name="logout" [size]="17" />
+              Sign out
+            </button>
+          } @else {
+            <a routerLink="/login" class="ox-btn ox-btn--primary ox-btn--block" (click)="closeMenu()">
+              Sign in
+            </a>
+          }
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <app-mini-cart [open]="miniCartOpen()" (closed)="miniCartOpen.set(false)" />
+</div>

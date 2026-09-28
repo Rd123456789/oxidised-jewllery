@@ -1,0 +1,224 @@
+<div class="ox-container py-10">
+  <header class="mx-auto max-w-3xl">
+    <p class="ox-eyebrow">Order tracking</p>
+    <h1 class="ox-page-title mt-1">Track your order</h1>
+    <p class="mt-2 text-sm text-ink-soft">
+      Enter your order number and the phone used at checkout to see the latest delivery status.
+    </p>
+  </header>
+
+  <div class="mx-auto mt-8 max-w-3xl">
+    <form class="ox-card p-5 sm:p-6" (submit)="onSubmit($event)">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="ox-label" for="track-order-number">
+            Order number <span class="text-rose">*</span>
+          </label>
+          <input
+            id="track-order-number"
+            type="text"
+            class="ox-input"
+            placeholder="OX-100234"
+            autocomplete="off"
+            [value]="orderNumber()"
+            (input)="setOrderNumber($event)"
+          />
+        </div>
+
+        <div>
+          <label class="ox-label" for="track-phone">Phone (optional)</label>
+          <input
+            id="track-phone"
+            type="tel"
+            class="ox-input"
+            placeholder="+91 825003***7"
+            autocomplete="tel"
+            [value]="phone()"
+            (input)="setPhone($event)"
+          />
+        </div>
+      </div>
+
+      @if (errorMessage(); as message) {
+        <p class="mt-4 flex items-center gap-2 rounded-xl bg-rose/10 px-3 py-2 text-sm text-rose" role="alert">
+          <app-icon name="alert" [size]="15" />
+          {{ message }}
+        </p>
+      }
+
+      <button
+        type="submit"
+        class="ox-btn ox-btn--primary ox-btn--block mt-5 sm:w-auto"
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          <span class="ox-spinner"></span>
+          Looking up…
+        } @else {
+          <app-icon name="search" [size]="16" />
+          Track order
+        }
+      </button>
+    </form>
+
+    @if (tracked(); as info) {
+      <div class="mt-8 space-y-6">
+        <section class="ox-card p-6">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p class="ox-eyebrow">Order</p>
+              <h2 class="ox-display mt-1 text-xl text-ink">{{ info.orderNumber }}</h2>
+              <p class="mt-1 text-sm text-ink-soft">Placed on {{ date(info.placedAt) }}</p>
+            </div>
+            <app-status-badge [label]="statusLabel()" [tone]="statusTone()" />
+          </div>
+
+          @if (isAuthenticated()) {
+            <a
+              class="ox-btn ox-btn--outline ox-btn--sm mt-4"
+              [routerLink]="['/order', info.orderNumber]"
+            >
+              View full order
+              <app-icon name="arrow-right" [size]="14" />
+            </a>
+          }
+        </section>
+
+        <section class="ox-card p-6">
+          <h2 class="ox-display text-lg text-ink">Delivery progress</h2>
+
+          @if (info.status === 'cancelled' || info.status === 'returned' || info.status === 'refunded') {
+            <p class="mt-3 flex items-center gap-2 rounded-xl bg-rose/10 px-3 py-2 text-sm text-rose">
+              <app-icon name="alert" [size]="15" />
+              This order is {{ statusLabel() }}.
+            </p>
+          }
+
+          <ol class="mt-6 grid grid-cols-3 gap-4 sm:grid-cols-6">
+            @for (step of flow; track step) {
+              <li class="flex flex-col items-center text-center">
+                <span
+                  class="flex h-8 w-8 items-center justify-center rounded-full border-2"
+                  [class]="
+                    stepState(step) === 'upcoming'
+                      ? 'border-sand-deep bg-sand text-ink-muted'
+                      : 'border-brass bg-brass text-ivory'
+                  "
+                >
+                  @if (stepState(step) !== 'upcoming') {
+                    <app-icon name="check" [size]="14" />
+                  }
+                </span>
+                <span class="mt-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-soft">
+                  {{ label(step) }}
+                </span>
+              </li>
+            }
+          </ol>
+        </section>
+
+        @if (info.tracking.carrier || info.tracking.trackingNumber) {
+          <section class="ox-card p-6">
+            <h2 class="ox-display text-lg text-ink">Tracking details</h2>
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p class="text-sm font-medium text-ink">
+                  {{ info.tracking.carrier ?? 'Courier' }}
+                  @if (info.tracking.trackingNumber) {
+                    · {{ info.tracking.trackingNumber }}
+                  }
+                </p>
+                @if (info.tracking.shippedAt) {
+                  <p class="text-xs text-ink-muted">Shipped {{ date(info.tracking.shippedAt) }}</p>
+                }
+              </div>
+            </div>
+          </section>
+        }
+
+        <section class="ox-card overflow-hidden">
+          <div class="border-b border-sand-deep/60 px-6 py-4">
+            <h2 class="ox-display text-lg text-ink">Items in this order</h2>
+          </div>
+          <ul class="divide-y divide-sand-deep/60">
+            @for (item of info.items; track item.sku) {
+              <li class="flex items-center gap-4 px-6 py-4">
+                @if (item.image) {
+                  <img [src]="item.image" [alt]="item.name" class="h-14 w-12 rounded-lg object-cover" />
+                } @else {
+                  <div class="flex h-14 w-12 shrink-0 items-center justify-center rounded-lg bg-sand/50 text-sand-deep">
+                    <app-icon name="sparkles" [size]="18" />
+                  </div>
+                }
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium text-ink">{{ item.name }}</p>
+                  <p class="text-xs text-ink-muted">{{ item.sku }} · Qty {{ item.quantity }}</p>
+                </div>
+                <p class="text-sm font-semibold text-ink">{{ money(item.lineTotal) }}</p>
+              </li>
+            }
+          </ul>
+        </section>
+      </div>
+    } @else if (!loading() && !errorMessage()) {
+      <div class="ox-card mt-8 flex flex-col items-center gap-2 px-6 py-12 text-center">
+        <span class="flex h-12 w-12 items-center justify-center rounded-full bg-sand text-brass">
+          <app-icon name="truck" [size]="22" />
+        </span>
+        <h2 class="ox-display text-lg text-ink">Track your piece</h2>
+        <p class="max-w-md text-sm text-ink-soft">
+          Your tracking details will appear here once we find your order.
+        </p>
+      </div>
+    }
+  </div>
+
+  @defer (on viewport) {
+    <section class="mx-auto mt-12 grid max-w-3xl gap-4 sm:grid-cols-3 ox-reveal">
+      <div class="ox-panel p-5">
+        <p class="ox-eyebrow">Questions</p>
+        <h3 class="ox-display mt-1 text-base text-ink">Talk to us</h3>
+        <p class="mt-2 text-xs text-ink-muted">
+          {{ settings()?.supportEmail ?? 'support@example.com' }}
+          @if (settings()?.supportPhone) {
+            <br />{{ settings()?.supportPhone }}
+          }
+        </p>
+      </div>
+
+      <div class="ox-panel p-5">
+        <p class="ox-eyebrow">Returns</p>
+        <h3 class="ox-display mt-1 text-base text-ink">
+          {{ settings()?.returnsWindowDays ?? 7 }}-day window
+        </h3>
+        <p class="mt-2 text-xs text-ink-muted">
+          Return unused pieces in original packaging within the window for a refund or exchange.
+        </p>
+      </div>
+
+      <div class="ox-panel p-5">
+        <p class="ox-eyebrow">Care</p>
+        <h3 class="ox-display mt-1 text-base text-ink">Keep the patina</h3>
+        <ul class="mt-2 space-y-1 text-xs text-ink-muted">
+          <li>Keep away from water and perfume.</li>
+          <li>Wipe with the soft pouch after wearing.</li>
+          <li>Never use silver polish.</li>
+        </ul>
+      </div>
+    </section>
+  } @placeholder (minimum 200ms) {
+    <div class="mx-auto mt-12 grid max-w-3xl gap-4 sm:grid-cols-3">
+      @for (placeholder of [1, 2, 3]; track placeholder) {
+        <div class="ox-skeleton h-28 rounded-xl"></div>
+      }
+    </div>
+  } @loading (minimum 200ms) {
+    <div class="mx-auto mt-12 grid max-w-3xl place-items-center py-8">
+      <span class="ox-spinner"></span>
+    </div>
+  } @error {
+    <p class="mx-auto mt-12 max-w-3xl text-sm text-ink-soft">
+      Help information could not be loaded.
+    </p>
+  }
+</div>

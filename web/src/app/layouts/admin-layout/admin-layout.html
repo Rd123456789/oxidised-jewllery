@@ -1,0 +1,97 @@
+<div class="ox-admin-shell flex min-h-screen">
+  <aside
+    class="fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-sand-deep/70 bg-paper transition-transform lg:static lg:translate-x-0"
+    [class.-translate-x-full]="!sidebarOpen()"
+  >
+    <div class="flex h-16 items-center justify-between border-b border-sand-deep/70 px-5">
+      <a routerLink="/admin/dashboard" class="flex items-center gap-2" (click)="closeSidebar()">
+        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brass text-sm font-semibold text-white">
+          OX
+        </span>
+        <span class="font-display text-base text-ink">Admin</span>
+      </a>
+      <button type="button" class="lg:hidden" aria-label="Close sidebar" (click)="closeSidebar()">
+        <app-icon name="close" [size]="18" />
+      </button>
+    </div>
+
+    <nav class="flex-1 space-y-1 overflow-y-auto p-3">
+      @for (item of navItems; track item.link) {
+        <a
+          [routerLink]="item.link"
+          routerLinkActive="bg-ink text-ivory"
+          [routerLinkActiveOptions]="{ exact: !!item.exact }"
+          class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ink-soft transition hover:bg-sand/70 hover:text-ink"
+          (click)="closeSidebar()"
+        >
+          <app-icon [name]="item.icon" [size]="17" />
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+
+    <div class="border-t border-sand-deep/70 p-3">
+      <a routerLink="/" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ink-soft hover:bg-sand/70">
+        <app-icon name="arrow-right" [size]="17" />
+        View storefront
+      </a>
+    </div>
+  </aside>
+
+  @if (sidebarOpen()) {
+    <button
+      type="button"
+      class="fixed inset-0 z-30 bg-ink/40 lg:hidden"
+      aria-label="Close navigation"
+      (click)="closeSidebar()"
+    ></button>
+  }
+
+  <div class="flex min-w-0 flex-1 flex-col">
+    <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-sand-deep/70 bg-paper/95 px-4 backdrop-blur lg:px-6">
+      <button type="button" class="lg:hidden" aria-label="Open navigation" (click)="sidebarOpen.set(true)">
+        <app-icon name="menu" [size]="20" />
+      </button>
+
+      <p class="hidden text-sm text-ink-muted lg:block">Store operations</p>
+
+      <div class="relative ml-auto">
+        <button
+          type="button"
+          class="flex items-center gap-2 rounded-full border border-sand-deep px-2 py-1.5 transition hover:border-brass"
+          (click)="userMenuOpen.update((open) => !open)"
+        >
+          <span class="flex h-7 w-7 items-center justify-center rounded-full bg-sand text-xs font-semibold text-ink">
+            {{ initials() }}
+          </span>
+          <span class="hidden text-left text-xs leading-tight sm:block">
+            <span class="block font-semibold text-ink">{{ userName() }}</span>
+            <span class="block text-ink-muted">{{ role() }}</span>
+          </span>
+          <app-icon name="chevron-down" [size]="14" />
+        </button>
+
+        @if (userMenuOpen()) {
+          <div class="absolute right-0 z-30 mt-2 w-56 ox-card p-2 text-sm">
+            <p class="px-3 py-2 text-xs text-ink-muted">{{ userEmail() }}</p>
+            <a routerLink="/account" class="block rounded-lg px-3 py-2 hover:bg-sand/60" (click)="userMenuOpen.set(false)">
+              My account
+            </a>
+            <button
+              type="button"
+              class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-rose hover:bg-rose/5"
+              (click)="signOut()"
+            >
+              <app-icon name="logout" [size]="15" />
+              Sign out
+            </button>
+          </div>
+        }
+      </div>
+    </header>
+
+    <main class="flex-1 p-4 lg:p-6">
+      <router-outlet />
+    </main>
+  </div>
+</div>

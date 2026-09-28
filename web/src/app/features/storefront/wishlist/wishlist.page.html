@@ -1,0 +1,52 @@
+<div class="bg-ivory">
+  <div class="ox-container py-10 lg:py-14">
+    <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="ox-eyebrow">Saved for later</p>
+        <h1 class="ox-page-title mt-1">Your wishlist</h1>
+        <p class="mt-2 text-sm text-ink-soft">
+          @if (loading()) {
+            Loading your saved pieces…
+          } @else {
+            {{ items().length }} piece{{ items().length === 1 ? '' : 's' }} saved
+          }
+        </p>
+      </div>
+
+      @if (!loading() && items().length > 0) {
+        <button
+          type="button"
+          class="ox-btn ox-btn--primary"
+          [disabled]="moving()"
+          (click)="moveAllToBag()"
+        >
+          @if (moving()) {
+            <span class="ox-spinner"></span>
+            Moving…
+          } @else {
+            <app-icon name="bag" [size]="15" />
+            Move all to bag
+          }
+        </button>
+      }
+    </header>
+
+    @if (loading()) {
+      <app-skeleton-grid [count]="8" [columns]="4" />
+    } @else if (items().length === 0) {
+      <app-empty-state
+        title="Your wishlist is empty"
+        message="Tap the heart on any piece to save it here for later."
+        icon="heart"
+        actionLabel="Start shopping"
+        actionLink="/shop"
+      />
+    } @else {
+      <div class="grid grid-cols-2 gap-5 lg:grid-cols-3 xl:grid-cols-4">
+        @for (item of items(); track item.id) {
+          <app-product-card [product]="item" />
+        }
+      </div>
+    }
+  </div>
+</div>

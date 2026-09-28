@@ -1,0 +1,52 @@
+<section class="bg-paper py-14">
+  <div class="ox-container">
+    <header class="mb-8">
+      <p class="ox-eyebrow">Curated edits</p>
+      <h2 class="ox-display mt-1 text-2xl text-ink sm:text-3xl">Shop by collection</h2>
+      <p class="mt-2 max-w-2xl text-sm text-ink-soft">
+        Themed edits put together by our stylists — from everyday oxidised studs to full bridal sets.
+      </p>
+    </header>
+
+    @if (loading()) {
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+          <div class="ox-skeleton h-56 rounded-2xl"></div>
+        }
+      </div>
+    } @else {
+      <div class="ox-stagger grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        @for (collection of collections(); track collection.id) {
+          <a
+            [routerLink]="['/collections', collection.slug]"
+            class="group relative overflow-hidden rounded-2xl border border-sand-deep/60"
+          >
+            @if (collection.heroImage?.url ?? collection.thumbnail?.url; as image) {
+              <img
+                [src]="image"
+                [alt]="collection.name"
+                loading="lazy"
+                class="h-56 w-full object-cover"
+              />
+            } @else {
+              <div class="h-56 w-full bg-sand"></div>
+            }
+
+            <div
+              class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-ink/85 via-ink/25 to-transparent p-4 text-ivory"
+            >
+              <span class="ox-badge ox-badge--tag self-start">
+                {{ collection.tagline ?? 'Collection' }}
+              </span>
+              <h3 class="ox-display mt-2 text-lg">{{ collection.name }}</h3>
+              <span class="mt-2 inline-flex items-center gap-1 text-xs font-semibold">
+                Explore
+                <app-icon name="arrow-right" [size]="13" />
+              </span>
+            </div>
+          </a>
+        }
+      </div>
+    }
+  </div>
+</section>

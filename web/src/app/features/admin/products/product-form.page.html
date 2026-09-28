@@ -1,0 +1,625 @@
+<form class="space-y-6" (submit)="submit($event)" novalidate>
+  <header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="ox-eyebrow">{{ isEdit() ? 'Edit' : 'Create' }}</p>
+      <h1 class="ox-page-title mt-1">
+        {{ isEdit() ? 'Edit product' : 'New product' }}
+      </h1>
+      <p class="mt-1 text-sm text-ink-muted">
+        Everything shoppers see, in one place.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button type="button" class="ox-btn ox-btn--ghost" (click)="cancel()">Cancel</button>
+
+      @if (isEdit()) {
+        @if (confirmingDelete()) {
+          <button type="button" class="ox-btn ox-btn--danger" [disabled]="saving()" (click)="confirmDelete()">
+            Confirm delete
+          </button>
+          <button type="button" class="ox-btn ox-btn--ghost" (click)="cancelDelete()">Cancel</button>
+        } @else {
+          <button type="button" class="ox-btn ox-btn--outline text-rose" (click)="askDelete()">
+            <app-icon name="trash" [size]="15" /> Delete
+          </button>
+        }
+      }
+
+      <button type="submit" class="ox-btn ox-btn--primary" [disabled]="saving()">
+        @if (saving()) {
+          <span class="ox-spinner"></span> Saving…
+        } @else {
+          {{ isEdit() ? 'Save changes' : 'Create product' }}
+        }
+      </button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="grid gap-4">
+      <div class="ox-skeleton h-40 rounded-2xl"></div>
+      <div class="ox-skeleton h-64 rounded-2xl"></div>
+    </div>
+  } @else {
+    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+      <div class="ox-page">
+        <section class="ox-card p-5">
+          <h2 class="ox-display text-lg text-ink">Basics</h2>
+          <div class="mt-4 grid gap-4">
+            <div>
+              <label class="ox-label" for="product-name">Name</label>
+              <input
+                id="product-name"
+                type="text"
+                class="ox-input"
+                [value]="form().name"
+                (input)="patch({ name: textOf($event) })"
+              />
+              @if (errors()['name']) {
+                <p class="ox-field-error">{{ errors()['name'] }}</p>
+              }
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-slug">Slug</label>
+              <div class="flex items-center gap-2">
+                <input
+                  id="product-slug"
+                  type="text"
+                  class="ox-input"
+                  placeholder="auto-generated"
+                  [value]="form().slug ?? ''"
+                  (input)="patch({ slug: textOf($event) })"
+                />
+                <button type="button" class="ox-btn ox-btn--outline ox-btn--sm shrink-0" (click)="generateSlug()">
+                  <app-icon name="sparkles" [size]="14" /> Generate
+                </button>
+              </div>
+              <p class="ox-help">Used in the product URL. Leave blank to let the API set it.</p>
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-sku">SKU</label>
+              <input
+                id="product-sku"
+                type="text"
+                class="ox-input"
+                [value]="form().sku ?? ''"
+                (input)="patch({ sku: textOf($event) })"
+              />
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-short">Short description</label>
+              <textarea
+                id="product-short"
+                rows="2"
+                class="ox-textarea"
+                [value]="form().shortDescription ?? ''"
+                (input)="patch({ shortDescription: textOf($event) })"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-description">Description</label>
+              <textarea
+                id="product-description"
+                rows="6"
+                class="ox-textarea"
+                [value]="form().description ?? ''"
+                (input)="patch({ description: textOf($event) })"
+              ></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section class="ox-card p-5">
+          <h2 class="ox-display text-lg text-ink">Organisation</h2>
+          <div class="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="ox-label" for="product-category">Category</label>
+              <select
+                id="product-category"
+                class="ox-select"
+                [value]="form().category"
+                (change)="patch({ category: textOf($event) })"
+              >
+                <option value="">Choose a category</option>
+                @for (category of categories(); track category.id) {
+                  <option [value]="category.id">{{ category.name }}</option>
+                }
+              </select>
+              @if (errors()['category']) {
+                <p class="ox-field-error">{{ errors()['category'] }}</p>
+              }
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-collections">Collections</label>
+              <select
+                id="product-collections"
+                class="ox-select"
+                multiple
+                size="4"
+                (change)="onCollectionsChange($event)"
+              >
+                @for (collection of collections(); track collection.id) {
+                  <option [value]="collection.id" [selected]="isCollectionSelected(collection.id)">
+                    {{ collection.name }}
+                  </option>
+                }
+              </select>
+              <p class="ox-help">Hold Ctrl / Cmd to select multiple.</p>
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="ox-label" for="product-tags">Tags</label>
+              <input
+                id="product-tags"
+                type="text"
+                class="ox-input"
+                placeholder="gift, festive, handmade"
+                [value]="(form().tags ?? []).join(', ')"
+                (input)="patch({ tags: listOf($event) })"
+              />
+              @if ((form().tags ?? []).length > 0) {
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                  @for (tag of form().tags ?? []; track tag) {
+                    <span class="ox-badge ox-badge--neutral">{{ tag }}</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </section>
+
+        <section class="ox-card p-5">
+          <h2 class="ox-display text-lg text-ink">Pricing &amp; stock</h2>
+          <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label class="ox-label" for="product-price">Price</label>
+              <input
+                id="product-price"
+                type="number"
+                min="0"
+                step="1"
+                class="ox-input"
+                [value]="form().price.toString()"
+                (input)="patch({ price: numberOf($event) })"
+              />
+              @if (errors()['price']) {
+                <p class="ox-field-error">{{ errors()['price'] }}</p>
+              }
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-mrp">MRP</label>
+              <input
+                id="product-mrp"
+                type="number"
+                min="0"
+                step="1"
+                class="ox-input"
+                [value]="form().mrp?.toString() ?? ''"
+                (input)="patch({ mrp: numberOrUndefined($event) })"
+              />
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-cost">Cost price</label>
+              <input
+                id="product-cost"
+                type="number"
+                min="0"
+                step="1"
+                class="ox-input"
+                [value]="form().costPrice?.toString() ?? ''"
+                (input)="patch({ costPrice: numberOrUndefined($event) })"
+              />
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-stock">Stock</label>
+              <input
+                id="product-stock"
+                type="number"
+                min="0"
+                step="1"
+                class="ox-input"
+                [value]="(form().stock ?? 0).toString()"
+                (input)="patch({ stock: numberOf($event) })"
+              />
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-threshold">Low stock threshold</label>
+              <input
+                id="product-threshold"
+                type="number"
+                min="0"
+                step="1"
+                class="ox-input"
+                [value]="form().lowStockThreshold?.toString() ?? ''"
+                (input)="patch({ lowStockThreshold: numberOrUndefined($event) })"
+              />
+            </div>
+
+            <div class="flex items-end">
+              <p class="ox-help">
+                Margin
+                <span class="font-semibold text-ink">{{ marginPercent() }}%</span>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="ox-card p-5">
+          <h2 class="ox-display text-lg text-ink">Media</h2>
+          <div class="mt-4">
+            <app-image-uploader
+              [images]="form().images ?? []"
+              folder="products"
+              [maxFiles]="8"
+              (imagesChange)="onImages($event)"
+            />
+          </div>
+        </section>
+
+        <section class="ox-card p-5">
+          <div class="flex items-center justify-between">
+            <h2 class="ox-display text-lg text-ink">Variants</h2>
+            <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" (click)="addVariant()">
+              <app-icon name="plus" [size]="14" /> Add variant
+            </button>
+          </div>
+
+          @if ((form().variants ?? []).length === 0) {
+            <p class="mt-4 text-sm text-ink-muted">
+              No variants yet. Add one for size, colour or finish options.
+            </p>
+          } @else {
+            <div class="mt-4 space-y-4">
+              @for (variant of form().variants ?? []; track $index; let i = $index) {
+                <div class="ox-panel p-4">
+                  <div class="flex items-center justify-between">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-ink-muted">Variant {{ i + 1 }}</p>
+                    <button
+                      type="button"
+                      class="ox-btn ox-btn--ghost ox-btn--sm text-rose"
+                      aria-label="Remove variant"
+                      (click)="removeVariant(i)"
+                    >
+                      <app-icon name="trash" [size]="14" />
+                    </button>
+                  </div>
+
+                  <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <label class="ox-label" [attr.for]="'variant-' + i + '-name'">Name</label>
+                      <input
+                        [id]="'variant-' + i + '-name'"
+                        type="text"
+                        class="ox-input"
+                        [value]="variant.name"
+                        (input)="patchVariant(i, { name: textOf($event) })"
+                      />
+                      @if (errors()['variant-' + i + '-name']) {
+                        <p class="ox-field-error">{{ errors()['variant-' + i + '-name'] }}</p>
+                      }
+                    </div>
+
+                    <div>
+                      <label class="ox-label" [attr.for]="'variant-' + i + '-sku'">SKU</label>
+                      <input
+                        [id]="'variant-' + i + '-sku'"
+                        type="text"
+                        class="ox-input"
+                        [value]="variant.sku"
+                        (input)="patchVariant(i, { sku: textOf($event) })"
+                      />
+                      @if (errors()['variant-' + i + '-sku']) {
+                        <p class="ox-field-error">{{ errors()['variant-' + i + '-sku'] }}</p>
+                      }
+                    </div>
+
+                    <div>
+                      <label class="ox-label" [attr.for]="'variant-' + i + '-price'">Price</label>
+                      <input
+                        [id]="'variant-' + i + '-price'"
+                        type="number"
+                        min="0"
+                        class="ox-input"
+                        [value]="variant.price.toString()"
+                        (input)="patchVariant(i, { price: numberOf($event) })"
+                      />
+                      @if (errors()['variant-' + i + '-price']) {
+                        <p class="ox-field-error">{{ errors()['variant-' + i + '-price'] }}</p>
+                      }
+                    </div>
+
+                    <div>
+                      <label class="ox-label" [attr.for]="'variant-' + i + '-mrp'">MRP</label>
+                      <input
+                        [id]="'variant-' + i + '-mrp'"
+                        type="number"
+                        min="0"
+                        class="ox-input"
+                        [value]="variant.mrp?.toString() ?? ''"
+                        (input)="patchVariant(i, { mrp: numberOrUndefined($event) })"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="ox-label" [attr.for]="'variant-' + i + '-stock'">Stock</label>
+                      <input
+                        [id]="'variant-' + i + '-stock'"
+                        type="number"
+                        min="0"
+                        class="ox-input"
+                        [value]="variant.stock.toString()"
+                        (input)="patchVariant(i, { stock: numberOf($event) })"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="ox-label" [attr.for]="'variant-' + i + '-image'">Image URL</label>
+                      <input
+                        [id]="'variant-' + i + '-image'"
+                        type="text"
+                        class="ox-input"
+                        [value]="variant.image ?? ''"
+                        (input)="patchVariant(i, { image: textOf($event) })"
+                      />
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="ox-card p-5">
+          <h2 class="ox-display text-lg text-ink">Attributes</h2>
+          <div class="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="ox-label" for="product-colors">Colours</label>
+              <input
+                id="product-colors"
+                type="text"
+                class="ox-input"
+                placeholder="silver, black, gold"
+                [value]="(form().colors ?? []).join(', ')"
+                (input)="patch({ colors: listOf($event) })"
+              />
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-materials">Materials</label>
+              <input
+                id="product-materials"
+                type="text"
+                class="ox-input"
+                placeholder="brass, oxidised silver"
+                [value]="(form().materials ?? []).join(', ')"
+                (input)="patch({ materials: listOf($event) })"
+              />
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-stones">Stones</label>
+              <input
+                id="product-stones"
+                type="text"
+                class="ox-input"
+                placeholder="kundan, pearl"
+                [value]="(form().stones ?? []).join(', ')"
+                (input)="patch({ stones: listOf($event) })"
+              />
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-occasions">Occasions</label>
+              <input
+                id="product-occasions"
+                type="text"
+                class="ox-input"
+                placeholder="wedding, festive, daily"
+                [value]="(form().occasions ?? []).join(', ')"
+                (input)="patch({ occasions: listOf($event) })"
+              />
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-weight">Weight (grams)</label>
+              <input
+                id="product-weight"
+                type="number"
+                min="0"
+                class="ox-input"
+                [value]="form().weightGrams?.toString() ?? ''"
+                (input)="patch({ weightGrams: numberOrUndefined($event) })"
+              />
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="ox-label" for="product-care">Care instructions</label>
+              <textarea
+                id="product-care"
+                rows="3"
+                class="ox-textarea"
+                [value]="form().careInstructions ?? ''"
+                (input)="patch({ careInstructions: textOf($event) })"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="mt-5">
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-semibold text-ink-soft">Specifications</p>
+              <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" (click)="addSpecification()">
+                <app-icon name="plus" [size]="14" /> Add row
+              </button>
+            </div>
+
+            @if ((form().specifications ?? []).length === 0) {
+              <p class="mt-2 text-sm text-ink-muted">No specifications yet.</p>
+            } @else {
+              <div class="mt-3 space-y-2">
+                @for (specification of form().specifications ?? []; track $index; let i = $index) {
+                  <div class="flex items-center gap-2">
+                    <label class="sr-only" [attr.for]="'spec-' + i + '-label'">Label</label>
+                    <input
+                      [id]="'spec-' + i + '-label'"
+                      type="text"
+                      class="ox-input"
+                      placeholder="Label"
+                      [value]="specification.label"
+                      (input)="patchSpecification(i, { label: textOf($event) })"
+                    />
+                    <label class="sr-only" [attr.for]="'spec-' + i + '-value'">Value</label>
+                    <input
+                      [id]="'spec-' + i + '-value'"
+                      type="text"
+                      class="ox-input"
+                      placeholder="Value"
+                      [value]="specification.value"
+                      (input)="patchSpecification(i, { value: textOf($event) })"
+                    />
+                    <button
+                      type="button"
+                      class="ox-btn ox-btn--ghost ox-btn--sm text-rose shrink-0"
+                      aria-label="Remove specification"
+                      (click)="removeSpecification(i)"
+                    >
+                      <app-icon name="trash" [size]="14" />
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="ox-card p-5">
+          <h2 class="ox-display text-lg text-ink">Flags</h2>
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <label class="flex items-center gap-2 text-sm text-ink-soft" for="flag-active">
+              <input
+                id="flag-active"
+                type="checkbox"
+                class="ox-checkbox"
+                [checked]="form().isActive ?? false"
+                (change)="patch({ isActive: checkedOf($event) })"
+              />
+              Active (visible in store)
+            </label>
+
+            <label class="flex items-center gap-2 text-sm text-ink-soft" for="flag-featured">
+              <input
+                id="flag-featured"
+                type="checkbox"
+                class="ox-checkbox"
+                [checked]="form().isFeatured ?? false"
+                (change)="patch({ isFeatured: checkedOf($event) })"
+              />
+              Featured
+            </label>
+
+            <label class="flex items-center gap-2 text-sm text-ink-soft" for="flag-new">
+              <input
+                id="flag-new"
+                type="checkbox"
+                class="ox-checkbox"
+                [checked]="form().isNewArrival ?? false"
+                (change)="patch({ isNewArrival: checkedOf($event) })"
+              />
+              New arrival
+            </label>
+
+            <label class="flex items-center gap-2 text-sm text-ink-soft" for="flag-best">
+              <input
+                id="flag-best"
+                type="checkbox"
+                class="ox-checkbox"
+                [checked]="form().isBestSeller ?? false"
+                (change)="patch({ isBestSeller: checkedOf($event) })"
+              />
+              Best seller
+            </label>
+          </div>
+        </section>
+
+        <section class="ox-card p-5">
+          <h2 class="ox-display text-lg text-ink">SEO</h2>
+          <div class="mt-4 grid gap-4">
+            <div>
+              <label class="ox-label" for="product-meta-title">Meta title</label>
+              <input
+                id="product-meta-title"
+                type="text"
+                class="ox-input"
+                [value]="form().metaTitle ?? ''"
+                (input)="patch({ metaTitle: textOf($event) })"
+              />
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-meta-description">Meta description</label>
+              <textarea
+                id="product-meta-description"
+                rows="3"
+                class="ox-textarea"
+                [value]="form().metaDescription ?? ''"
+                (input)="patch({ metaDescription: textOf($event) })"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="ox-label" for="product-keywords">Keywords</label>
+              <input
+                id="product-keywords"
+                type="text"
+                class="ox-input"
+                placeholder="oxidised earrings, silver jhumka"
+                [value]="(form().keywords ?? []).join(', ')"
+                (input)="patch({ keywords: listOf($event) })"
+              />
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="space-y-4 xl:sticky xl:top-20 xl:self-start">
+        <div class="ox-card overflow-hidden">
+          @if (primaryImage(); as image) {
+            <img [src]="image.url" [alt]="image.alt ?? form().name" class="aspect-square w-full object-cover" />
+          } @else {
+            <div class="flex aspect-square w-full items-center justify-center bg-sand text-ink-muted">
+              <app-icon name="image" [size]="30" />
+            </div>
+          }
+
+          <div class="space-y-2 p-4">
+            <p class="text-xs uppercase tracking-wide text-ink-muted">Live preview</p>
+            <h3 class="font-display text-lg text-ink">{{ form().name || 'Untitled product' }}</h3>
+            <app-price [amount]="form().price" [mrp]="form().mrp" [showDiscount]="true" />
+            <p class="text-xs text-ink-muted">{{ categoryName() }}</p>
+            <p
+              class="text-xs font-semibold"
+              [class.text-olive]="(form().stock ?? 0) > 0"
+              [class.text-rose]="(form().stock ?? 0) <= 0"
+            >
+              {{ (form().stock ?? 0) > 0 ? 'In stock' : 'Out of stock' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="ox-panel flex items-center justify-between p-4 text-xs text-ink-muted">
+          <span>Estimated margin</span>
+          <span class="text-sm font-semibold text-ink">{{ marginPercent() }}%</span>
+        </div>
+      </aside>
+    </div>
+  }
+</form>

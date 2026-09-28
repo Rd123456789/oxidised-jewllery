@@ -1,0 +1,294 @@
+<div class="ox-page">
+  <header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="ox-eyebrow">Catalogue</p>
+      <h1 class="ox-page-title mt-1">Collections</h1>
+      <p class="mt-1 text-sm text-ink-muted">Curate themed edits across products.</p>
+    </div>
+    <button type="button" class="ox-btn ox-btn--primary" (click)="startCreate()">
+      <app-icon name="plus" [size]="16" /> New collection
+    </button>
+  </header>
+
+  <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+    <div class="ox-card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[44rem] text-sm">
+          <thead>
+            <tr class="bg-sand/60 text-xs uppercase tracking-wide text-ink-muted">
+              <th class="px-4 py-3 text-left font-semibold">Collection</th>
+              <th class="px-4 py-3 text-left font-semibold">Products</th>
+              <th class="px-4 py-3 text-left font-semibold">Sort</th>
+              <th class="px-4 py-3 text-left font-semibold">Status</th>
+              <th class="px-4 py-3 text-right font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading() && collections().length === 0) {
+              @for (row of [1, 2, 3]; track row) {
+                <tr class="border-t border-sand-deep/50">
+                  <td class="px-4 py-4" colspan="5"><div class="ox-skeleton h-8 w-full"></div></td>
+                </tr>
+              }
+            } @else if (collections().length === 0) {
+              <tr>
+                <td class="px-4 py-12 text-center text-sm text-ink-muted" colspan="5">
+                  No collections yet. Create your first edit.
+                </td>
+              </tr>
+            } @else {
+              @for (collection of collections(); track collection.id) {
+                <tr class="border-t border-sand-deep/50 hover:bg-sand/30">
+                  <td class="px-4 py-3">
+                    <div class="flex items-center gap-3">
+                      @if (collection.heroImage ?? collection.thumbnail; as image) {
+                        <img [src]="image.url" [alt]="collection.name" class="h-12 w-12 rounded-lg object-cover" loading="lazy" />
+                      } @else {
+                        <span class="flex h-12 w-12 items-center justify-center rounded-lg bg-sand text-ink-muted">
+                          <app-icon name="sparkles" [size]="17" />
+                        </span>
+                      }
+                      <div class="min-w-0">
+                        <p class="truncate font-semibold text-ink">{{ collection.name }}</p>
+                        @if (collection.tagline) {
+                          <p class="truncate text-xs text-ink-muted">{{ collection.tagline }}</p>
+                        }
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 text-ink-soft">{{ productCount(collection) }}</td>
+                  <td class="px-4 py-3 text-ink-soft">{{ collection.sortOrder }}</td>
+                  <td class="px-4 py-3">
+                    <div class="flex flex-wrap items-center gap-1">
+                      <span
+                        class="ox-badge"
+                        [class.ox-badge--success]="collection.isActive"
+                        [class.ox-badge--neutral]="!collection.isActive"
+                      >
+                        {{ collection.isActive ? 'Active' : 'Hidden' }}
+                      </span>
+                      @if (collection.isFeatured) {
+                        <span class="ox-badge ox-badge--progress">Featured</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="flex items-center justify-end gap-1">
+                      <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" (click)="startEdit(collection)">
+                        <app-icon name="edit" [size]="14" /> Edit
+                      </button>
+                      @if (confirmingId() === collection.id) {
+                        <button type="button" class="ox-btn ox-btn--danger ox-btn--sm" (click)="confirmDelete(collection)">
+                          Confirm
+                        </button>
+                        <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" (click)="cancelDelete()">
+                          Cancel
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="ox-btn ox-btn--ghost ox-btn--sm text-rose"
+                          aria-label="Delete collection"
+                          (click)="askDelete(collection.id)"
+                        >
+                          <app-icon name="trash" [size]="14" />
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <aside class="xl:sticky xl:top-20 xl:self-start">
+      <form class="ox-card p-5" (submit)="save($event)" novalidate>
+        <div class="flex items-center justify-between">
+          <h2 class="ox-display text-lg text-ink">
+            {{ isEditing() ? 'Edit collection' : 'New collection' }}
+          </h2>
+          @if (isEditing()) {
+            <span class="ox-badge ox-badge--info">Editing</span>
+          }
+        </div>
+
+        <div class="mt-4 space-y-4">
+          <div>
+            <label class="ox-label" for="collection-name">Name</label>
+            <input
+              id="collection-name"
+              type="text"
+              class="ox-input"
+              [value]="form().name"
+              (input)="onName($event)"
+            />
+            @if (errors()['name']) {
+              <p class="ox-field-error">{{ errors()['name'] }}</p>
+            }
+          </div>
+
+          <div>
+            <label class="ox-label" for="collection-slug">Slug</label>
+            <div class="flex items-center gap-2">
+              <input
+                id="collection-slug"
+                type="text"
+                class="ox-input"
+                placeholder="auto-generated"
+                [value]="form().slug ?? ''"
+                (input)="patch({ slug: textOf($event) })"
+              />
+              <button
+                type="button"
+                class="ox-btn ox-btn--outline ox-btn--sm shrink-0"
+                aria-label="Generate slug from the collection name"
+                (click)="generateSlug()"
+              >
+                <app-icon name="sparkles" [size]="14" />
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="ox-label" for="collection-tagline">Tagline</label>
+            <input
+              id="collection-tagline"
+              type="text"
+              class="ox-input"
+              [value]="form().tagline ?? ''"
+              (input)="patch({ tagline: textOf($event) })"
+            />
+          </div>
+
+          <div>
+            <label class="ox-label" for="collection-description">Description</label>
+            <textarea
+              id="collection-description"
+              rows="3"
+              class="ox-textarea"
+              [value]="form().description ?? ''"
+              (input)="patch({ description: textOf($event) })"
+            ></textarea>
+          </div>
+
+          <div>
+            <span class="ox-label">Hero image</span>
+            <app-image-uploader
+              [images]="heroImages()"
+              folder="collections"
+              [maxFiles]="1"
+              (imagesChange)="onHeroImages($event)"
+            />
+          </div>
+
+          <div>
+            <span class="ox-label">Thumbnail</span>
+            <app-image-uploader
+              [images]="thumbnailImages()"
+              folder="collections"
+              [maxFiles]="1"
+              (imagesChange)="onThumbnailImages($event)"
+            />
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="ox-label" for="collection-theme">Theme colour</label>
+              <input
+                id="collection-theme"
+                type="color"
+                class="ox-input h-10 p-1"
+                [value]="form().themeColor"
+                (input)="patch({ themeColor: textOf($event) })"
+              />
+            </div>
+
+            <div>
+              <label class="ox-label" for="collection-sort">Sort order</label>
+              <input
+                id="collection-sort"
+                type="number"
+                min="0"
+                class="ox-input"
+                [value]="(form().sortOrder ?? 0).toString()"
+                (input)="patch({ sortOrder: numberOf($event) })"
+              />
+            </div>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="flex items-center gap-2 text-sm text-ink-soft" for="collection-active">
+              <input
+                id="collection-active"
+                type="checkbox"
+                class="ox-checkbox"
+                [checked]="form().isActive ?? false"
+                (change)="patch({ isActive: checkedOf($event) })"
+              />
+              Active
+            </label>
+            <label class="flex items-center gap-2 text-sm text-ink-soft" for="collection-featured">
+              <input
+                id="collection-featured"
+                type="checkbox"
+                class="ox-checkbox"
+                [checked]="form().isFeatured ?? false"
+                (change)="patch({ isFeatured: checkedOf($event) })"
+              />
+              Featured
+            </label>
+          </div>
+
+          <div>
+            <label class="ox-label" for="collection-product-search">Products</label>
+            <input
+              id="collection-product-search"
+              type="search"
+              class="ox-input"
+              placeholder="Search products"
+              [value]="productSearch()"
+              (input)="productSearch.set(textOf($event))"
+            />
+            <p class="ox-help">{{ selectedCount() }} selected</p>
+
+            <div class="mt-2 max-h-64 space-y-1 overflow-y-auto rounded-lg border border-sand-deep/70 p-2">
+              @if (filteredProducts().length === 0) {
+                <p class="px-2 py-3 text-xs text-ink-muted">No products match your search.</p>
+              } @else {
+                @for (product of filteredProducts(); track product.id) {
+                  <label
+                    class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-ink-soft hover:bg-sand/40"
+                    [attr.for]="'collection-product-' + product.id"
+                  >
+                    <input
+                      [id]="'collection-product-' + product.id"
+                      type="checkbox"
+                      class="ox-checkbox"
+                      [checked]="isProductSelected(product.id)"
+                      (change)="toggleProduct(product.id)"
+                    />
+                    <span class="truncate">{{ product.name }}</span>
+                  </label>
+                }
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 flex items-center gap-2">
+          <button type="submit" class="ox-btn ox-btn--primary flex-1" [disabled]="saving()">
+            @if (saving()) {
+              <span class="ox-spinner"></span> Saving…
+            } @else {
+              {{ isEditing() ? 'Save changes' : 'Create collection' }}
+            }
+          </button>
+          <button type="button" class="ox-btn ox-btn--ghost" (click)="cancelEdit()">Reset</button>
+        </div>
+      </form>
+    </aside>
+  </div>
+</div>

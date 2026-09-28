@@ -1,0 +1,38 @@
+<div class="bg-ivory">
+  <div class="ox-container max-w-3xl py-10 lg:py-16">
+    @if (loading()) {
+      <div class="space-y-4">
+        <div class="ox-skeleton h-4 w-24"></div>
+        <div class="ox-skeleton h-10 w-2/3"></div>
+        <div class="ox-skeleton h-4 w-full"></div>
+        <div class="ox-skeleton h-4 w-5/6"></div>
+        <div class="ox-skeleton h-40 w-full"></div>
+      </div>
+    } @else if (notFound()) {
+      <app-empty-state
+        title="Page not found"
+        message="The page you are looking for may have moved or been retired."
+        icon="page"
+        actionLabel="Back to home"
+        actionLink="/"
+      />
+    } @else {
+      @if (page(); as item) {
+        <p class="ox-eyebrow">Information</p>
+        <h1 class="ox-display mt-2 text-3xl text-ink sm:text-4xl">{{ item.title }}</h1>
+
+        @if (item.excerpt) {
+          <p class="mt-4 text-base leading-relaxed text-ink-soft">{{ item.excerpt }}</p>
+        }
+
+        <article class="ox-prose mt-8" [innerHTML]="item.content"></article>
+
+        @if (item.createdAt) {
+          <p class="mt-10 border-t border-sand-deep/50 pt-4 text-xs text-ink-muted">
+            Last updated {{ formatDate(item.createdAt) }}
+          </p>
+        }
+      }
+    }
+  </div>
+</div>

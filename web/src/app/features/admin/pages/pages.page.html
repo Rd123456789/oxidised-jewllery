@@ -1,0 +1,293 @@
+<div class="ox-page">
+  <div class="ox-page-header">
+    <div>
+      <h1 class="ox-page-title">Pages</h1>
+      <p class="mt-1 text-sm text-ink-soft">Manage about, policy and footer content.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" class="ox-btn ox-btn--outline" (click)="reload()" [disabled]="loading()">
+        <app-icon name="refresh" [size]="15" />
+        Refresh
+      </button>
+      <button type="button" class="ox-btn ox-btn--primary" (click)="openCreate()">
+        <app-icon name="plus" [size]="15" />
+        New page
+      </button>
+    </div>
+  </div>
+
+  @if (panelOpen()) {
+    <section class="ox-card p-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="font-display text-lg text-ink">{{ editingId() ? 'Edit page' : 'New page' }}</h2>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="ox-btn ox-btn--outline ox-btn--sm"
+            [attr.aria-pressed]="preview()"
+            (click)="togglePreview()"
+          >
+            <app-icon name="page" [size]="14" />
+            {{ preview() ? 'Hide preview' : 'Show preview' }}
+          </button>
+          <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" aria-label="Close form" (click)="closePanel()">
+            <app-icon name="close" [size]="16" />
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-4 grid gap-4 lg:grid-cols-2">
+        <div>
+          <label class="ox-label" for="page-title">Title</label>
+          <input
+            id="page-title"
+            type="text"
+            class="ox-input"
+            [ngModel]="form().title"
+            (ngModelChange)="onTitle($event)"
+          />
+        </div>
+        <div>
+          <label class="ox-label" for="page-slug">Slug</label>
+          <input
+            id="page-slug"
+            type="text"
+            class="ox-input font-mono"
+            [ngModel]="form().slug"
+            (ngModelChange)="onSlug($event)"
+          />
+          <p class="ox-help">Used at /pages/{{ form().slug || 'your-slug' }}</p>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <label class="ox-label" for="page-excerpt">Excerpt</label>
+        <textarea
+          id="page-excerpt"
+          rows="2"
+          class="ox-textarea"
+          [ngModel]="form().excerpt"
+          (ngModelChange)="patch({ excerpt: $event })"
+        ></textarea>
+      </div>
+
+      <div class="mt-4">
+        <label class="ox-label" for="page-content">Content</label>
+        <textarea
+          id="page-content"
+          rows="16"
+          class="ox-textarea font-mono text-xs"
+          [ngModel]="form().content"
+          (ngModelChange)="patch({ content: $event })"
+        ></textarea>
+        <p class="ox-help">Basic HTML is allowed (headings, paragraphs, lists, links and images).</p>
+      </div>
+
+      @if (preview()) {
+        <div class="ox-panel mt-4 p-4">
+          <p class="ox-eyebrow mb-3">Live preview</p>
+          <article class="ox-prose" [innerHTML]="form().content"></article>
+        </div>
+      }
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-3">
+        <label class="flex items-center gap-2 text-sm text-ink-soft">
+          <input
+            type="checkbox"
+            class="ox-checkbox"
+            [ngModel]="form().isPublished"
+            (ngModelChange)="patch({ isPublished: $event })"
+          />
+          Published
+        </label>
+        <label class="flex items-center gap-2 text-sm text-ink-soft">
+          <input
+            type="checkbox"
+            class="ox-checkbox"
+            [ngModel]="form().showInFooter"
+            (ngModelChange)="patch({ showInFooter: $event })"
+          />
+          Show in footer
+        </label>
+        <label class="flex items-center gap-2 text-sm text-ink-soft">
+          <input
+            type="checkbox"
+            class="ox-checkbox"
+            [ngModel]="form().showInHeader"
+            (ngModelChange)="patch({ showInHeader: $event })"
+          />
+          Show in header
+        </label>
+      </div>
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <label class="ox-label" for="page-sort">Sort order</label>
+          <input
+            id="page-sort"
+            type="number"
+            class="ox-input"
+            [ngModel]="form().sortOrder"
+            (ngModelChange)="patch({ sortOrder: $event })"
+          />
+        </div>
+        <div class="lg:col-span-3">
+          <label class="ox-label" for="page-meta-title">Meta title</label>
+          <input
+            id="page-meta-title"
+            type="text"
+            class="ox-input"
+            [ngModel]="form().metaTitle"
+            (ngModelChange)="patch({ metaTitle: $event })"
+          />
+        </div>
+        <div class="lg:col-span-2">
+          <label class="ox-label" for="page-meta-description">Meta description</label>
+          <textarea
+            id="page-meta-description"
+            rows="2"
+            class="ox-textarea"
+            [ngModel]="form().metaDescription"
+            (ngModelChange)="patch({ metaDescription: $event })"
+          ></textarea>
+        </div>
+        <div class="lg:col-span-2">
+          <label class="ox-label" for="page-keywords">Keywords</label>
+          <input
+            id="page-keywords"
+            type="text"
+            class="ox-input"
+            placeholder="silver, oxidised, earrings"
+            [ngModel]="form().keywords"
+            (ngModelChange)="patch({ keywords: $event })"
+          />
+          <p class="ox-help">Comma separated.</p>
+        </div>
+      </div>
+
+      <div class="mt-4 flex gap-2">
+        <button type="button" class="ox-btn ox-btn--primary" [disabled]="saving()" (click)="save()">
+          {{ saving() ? 'Saving…' : editingId() ? 'Save changes' : 'Create page' }}
+        </button>
+        <button type="button" class="ox-btn ox-btn--ghost" (click)="closePanel()">Cancel</button>
+      </div>
+    </section>
+  }
+
+  @if (loading()) {
+    <div class="ox-card p-4">
+      <div class="space-y-2">
+        @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+          <div class="ox-skeleton h-12 w-full"></div>
+        }
+      </div>
+    </div>
+  } @else if (failed()) {
+    <div class="ox-card flex flex-col items-center gap-3 px-6 py-12 text-center">
+      <span class="flex h-11 w-11 items-center justify-center rounded-full bg-rose/10 text-rose">
+        <app-icon name="alert" [size]="20" />
+      </span>
+      <p class="text-sm text-ink-soft">We could not load pages. Please try again.</p>
+      <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" (click)="reload()">Retry</button>
+    </div>
+  } @else if (pages().length === 0) {
+    <app-empty-state
+      icon="page"
+      title="No pages yet"
+      message="Create your first CMS page for about, shipping or returns content."
+    />
+  } @else {
+    <div class="ox-card overflow-x-auto">
+      <table class="w-full min-w-[60rem] border-collapse text-sm">
+        <thead>
+          <tr class="bg-sand/60 text-xs uppercase tracking-wide text-ink-muted">
+            <th class="px-4 py-3 text-left font-semibold">Title</th>
+            <th class="px-4 py-3 text-left font-semibold">Slug</th>
+            <th class="px-4 py-3 text-center font-semibold">Published</th>
+            <th class="px-4 py-3 text-center font-semibold">Footer</th>
+            <th class="px-4 py-3 text-center font-semibold">Header</th>
+            <th class="px-4 py-3 text-center font-semibold">Order</th>
+            <th class="px-4 py-3 text-left font-semibold">Updated</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (page of pages(); track page.id) {
+            <tr class="border-t border-sand-deep/50 transition hover:bg-sand/30">
+              <td class="px-4 py-3">
+                <span class="font-medium text-ink">{{ page.title }}</span>
+                @if (page.excerpt) {
+                  <span class="block text-xs text-ink-muted">{{ page.excerpt }}</span>
+                }
+              </td>
+              <td class="px-4 py-3 font-mono text-xs text-ink-soft">/pages/{{ page.slug }}</td>
+              <td class="px-4 py-3 text-center">
+                <input
+                  type="checkbox"
+                  class="ox-checkbox"
+                  [ngModel]="page.isPublished"
+                  [disabled]="togglingId() === page.id"
+                  [attr.aria-label]="'Toggle published for ' + page.title"
+                  (ngModelChange)="toggleFlag(page, { isPublished: !page.isPublished })"
+                />
+              </td>
+              <td class="px-4 py-3 text-center">
+                <input
+                  type="checkbox"
+                  class="ox-checkbox"
+                  [ngModel]="page.showInFooter"
+                  [disabled]="togglingId() === page.id"
+                  [attr.aria-label]="'Toggle footer for ' + page.title"
+                  (ngModelChange)="toggleFlag(page, { showInFooter: !page.showInFooter })"
+                />
+              </td>
+              <td class="px-4 py-3 text-center">
+                <input
+                  type="checkbox"
+                  class="ox-checkbox"
+                  [ngModel]="page.showInHeader"
+                  [disabled]="togglingId() === page.id"
+                  [attr.aria-label]="'Toggle header for ' + page.title"
+                  (ngModelChange)="toggleFlag(page, { showInHeader: !page.showInHeader })"
+                />
+              </td>
+              <td class="px-4 py-3 text-center text-ink-soft">{{ page.sortOrder }}</td>
+              <td class="px-4 py-3 text-xs text-ink-soft">{{ formatDate(pageUpdated(page)) }}</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-end gap-2">
+                  <a
+                    class="ox-btn ox-btn--ghost ox-btn--sm"
+                    [href]="'/pages/' + page.slug"
+                    target="_blank"
+                    rel="noopener"
+                    [attr.aria-label]="'Preview ' + page.title"
+                  >
+                    <app-icon name="arrow-right" [size]="14" />
+                    Preview
+                  </a>
+                  <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" (click)="openEdit(page)">
+                    <app-icon name="edit" [size]="14" />
+                    Edit
+                  </button>
+                  @if (confirmingId() === page.id) {
+                    <button type="button" class="ox-btn ox-btn--danger ox-btn--sm" (click)="remove(page)">Confirm</button>
+                    <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" (click)="confirmingId.set(null)">Cancel</button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="ox-btn ox-btn--ghost ox-btn--sm text-rose"
+                      [attr.aria-label]="'Delete ' + page.title"
+                      (click)="confirmingId.set(page.id)"
+                    >
+                      <app-icon name="trash" [size]="14" />
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

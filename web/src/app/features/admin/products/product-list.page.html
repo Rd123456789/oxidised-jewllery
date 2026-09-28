@@ -1,0 +1,290 @@
+<div class="ox-page">
+  <header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="ox-eyebrow">Catalogue</p>
+      <h1 class="ox-page-title mt-1">Products</h1>
+      <p class="mt-1 text-sm text-ink-muted">Create, price and publish every piece in the store.</p>
+    </div>
+    <a class="ox-btn ox-btn--primary" routerLink="/admin/products/new">
+      <app-icon name="plus" [size]="16" /> New product
+    </a>
+  </header>
+
+  <section class="ox-panel p-4">
+    <div class="grid gap-3 lg:grid-cols-4">
+      <div>
+        <label class="ox-label" for="product-search">Search</label>
+        <div class="relative">
+          <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink-muted">
+            <app-icon name="search" [size]="15" />
+          </span>
+          <input
+            id="product-search"
+            type="search"
+            class="ox-input pl-9"
+            placeholder="Name or SKU"
+            [value]="searchDraft()"
+            (input)="onSearch($event)"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label class="ox-label" for="product-category">Category</label>
+        <select
+          id="product-category"
+          class="ox-select"
+          [value]="query().category"
+          (change)="onFilterChange('category', $event)"
+        >
+          <option value="">All categories</option>
+          @for (category of categories(); track category.id) {
+            <option [value]="category.id">{{ category.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div>
+        <label class="ox-label" for="product-status">Status</label>
+        <select
+          id="product-status"
+          class="ox-select"
+          [value]="query().status"
+          (change)="onFilterChange('status', $event)"
+        >
+          @for (option of statusOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div>
+        <label class="ox-label" for="product-sort">Sort</label>
+        <select
+          id="product-sort"
+          class="ox-select"
+          [value]="query().sort"
+          (change)="onFilterChange('sort', $event)"
+        >
+          @for (option of sortOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <div class="flex items-center justify-between gap-3">
+    <p class="text-sm text-ink-muted">
+      @if (loading()) {
+        Loading products…
+      } @else {
+        {{ total() }} product{{ total() === 1 ? '' : 's' }}
+      }
+    </p>
+    @if (loading()) {
+      <span class="ox-spinner"></span>
+    }
+  </div>
+
+  <div class="ox-card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[64rem] text-sm">
+        <thead>
+          <tr class="bg-sand/60 text-xs uppercase tracking-wide text-ink-muted">
+            <th class="px-4 py-3 text-left font-semibold">Product</th>
+            <th class="px-4 py-3 text-left font-semibold">Category</th>
+            <th class="px-4 py-3 text-left font-semibold">Price</th>
+            <th class="px-4 py-3 text-left font-semibold">Stock</th>
+            <th class="px-4 py-3 text-left font-semibold">Status</th>
+            <th class="px-4 py-3 text-center font-semibold">Featured</th>
+            <th class="px-4 py-3 text-left font-semibold">Created</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading() && items().length === 0) {
+            @for (row of skeletonRows; track row) {
+              <tr class="border-t border-sand-deep/50">
+                <td class="px-4 py-4" colspan="8"><div class="ox-skeleton h-8 w-full"></div></td>
+              </tr>
+            }
+          } @else if (error()) {
+            <tr>
+              <td class="px-4 py-12 text-center" colspan="8">
+                <p class="text-sm text-rose">{{ error() }}</p>
+                <button type="button" class="ox-btn ox-btn--outline ox-btn--sm mt-3" (click)="load()">
+                  <app-icon name="refresh" [size]="14" /> Retry
+                </button>
+              </td>
+            </tr>
+          } @else if (items().length === 0) {
+            <tr>
+              <td class="px-4 py-12" colspan="8">
+                <app-empty-state
+                  title="No products found"
+                  message="Adjust the filters or add your first product."
+                  icon="box"
+                  actionLabel="New product"
+                  actionLink="/admin/products/new"
+                />
+              </td>
+            </tr>
+          } @else {
+            @for (item of items(); track item.id) {
+              <tr class="border-t border-sand-deep/50 hover:bg-sand/30">
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-3">
+                    @if (item.image) {
+                      <img [src]="item.image" [alt]="item.name" class="h-11 w-11 rounded-lg object-cover" loading="lazy" />
+                    } @else {
+                      <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-sand text-ink-muted">
+                        <app-icon name="box" [size]="17" />
+                      </span>
+                    }
+                    <div class="min-w-0">
+                      <a class="block truncate font-semibold text-ink hover:text-brass" [routerLink]="['/admin/products', item.id, 'edit']">
+                        {{ item.name }}
+                      </a>
+                      <p class="truncate text-xs text-ink-muted">{{ item.sku }}</p>
+                    </div>
+                  </div>
+                </td>
+
+                <td class="px-4 py-3 text-ink-soft">{{ item.category?.name ?? '—' }}</td>
+
+                <td class="px-4 py-3">
+                  <app-price [amount]="item.price" [mrp]="item.mrp" />
+                </td>
+
+                <td class="px-4 py-3">
+                  @if (editingStockId() === item.id) {
+                    <div class="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        class="ox-input w-20 py-1"
+                        aria-label="Stock quantity"
+                        [value]="stockDraft().toString()"
+                        (input)="onStockInput($event)"
+                      />
+                      <button
+                        type="button"
+                        class="ox-btn ox-btn--primary ox-btn--sm"
+                        [disabled]="busyId() === item.id"
+                        (click)="saveStock(item)"
+                      >
+                        Save
+                      </button>
+                      <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" (click)="cancelStockEdit()">
+                        Cancel
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="flex items-center gap-1">
+                      <button
+                        type="button"
+                        class="inline-flex items-center gap-1 rounded-md px-2 py-1 font-semibold hover:bg-sand/60"
+                        aria-label="Edit stock"
+                        (click)="startStockEdit(item)"
+                      >
+                        <span [class.text-rose]="isOutOfStock(item)" [class.text-brass]="isLowStock(item)">
+                          {{ item.stock }}
+                        </span>
+                        <app-icon name="edit" [size]="12" />
+                      </button>
+                      @if (isOutOfStock(item)) {
+                        <span class="ox-badge ox-badge--danger">Out</span>
+                      } @else if (isLowStock(item)) {
+                        <span class="ox-badge ox-badge--progress">Low</span>
+                      }
+                    </div>
+                  }
+                </td>
+
+                <td class="px-4 py-3">
+                  <app-status-badge
+                    [label]="item.isActive === false ? 'Draft' : 'Active'"
+                    [tone]="item.isActive === false ? 'neutral' : 'success'"
+                  />
+                </td>
+
+                <td class="px-4 py-3 text-center">
+                  <label class="sr-only" [attr.for]="'featured-' + item.id">Featured</label>
+                  <input
+                    [id]="'featured-' + item.id"
+                    type="checkbox"
+                    class="ox-checkbox"
+                    [checked]="item.isFeatured ?? false"
+                    [disabled]="busyId() === item.id"
+                    (change)="toggleFlag(item, 'isFeatured', checkedOf($event))"
+                  />
+                </td>
+
+                <td class="px-4 py-3 text-ink-muted">{{ formatDate(item.createdAt) }}</td>
+
+                <td class="px-4 py-3">
+                  <div class="flex items-center justify-end gap-1">
+                    <a
+                      class="ox-btn ox-btn--ghost ox-btn--sm"
+                      aria-label="Edit product"
+                      [routerLink]="['/admin/products', item.id, 'edit']"
+                    >
+                      <app-icon name="edit" [size]="15" />
+                    </a>
+                    <button
+                      type="button"
+                      class="ox-btn ox-btn--ghost ox-btn--sm"
+                      aria-label="Duplicate product"
+                      [disabled]="busyId() === item.id"
+                      (click)="duplicate(item)"
+                    >
+                      <app-icon name="plus" [size]="15" />
+                    </button>
+                    <button
+                      type="button"
+                      class="ox-btn ox-btn--outline ox-btn--sm"
+                      [disabled]="busyId() === item.id"
+                      (click)="toggleFlag(item, 'isActive', !(item.isActive ?? true))"
+                    >
+                      {{ item.isActive === false ? 'Publish' : 'Unpublish' }}
+                    </button>
+                    @if (confirmingId() === item.id) {
+                      <button
+                        type="button"
+                        class="ox-btn ox-btn--danger ox-btn--sm"
+                        [disabled]="busyId() === item.id"
+                        (click)="confirmDelete(item)"
+                      >
+                        Confirm
+                      </button>
+                      <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" (click)="cancelDelete()">
+                        Cancel
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="ox-btn ox-btn--ghost ox-btn--sm text-rose"
+                        aria-label="Delete product"
+                        (click)="askDelete(item.id)"
+                      >
+                        <app-icon name="trash" [size]="15" />
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-pagination
+    [page]="query().page"
+    [totalPages]="totalPages()"
+    [total]="total()"
+    (pageChange)="onPageChange($event)"
+  />
+</div>

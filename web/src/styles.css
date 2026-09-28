@@ -1,0 +1,879 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   Design tokens. Near-neutral, higher-contrast base: the previous palette leaned
+   heavily yellow-brown (ivory #faf7f2 / sand #efe6da / ink #1f1a17), which is what
+   read as a dated heritage theme. A hint of warmth is kept, without the sepia cast.
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-ivory: #fbfaf9;
+  --color-paper: #ffffff;
+  --color-sand: #f4f2ef;
+  --color-sand-deep: #e4e1dc;
+  /* Borders for interactive controls. `sand-deep` is fine for decorative card edges
+     but too faint to define a form field (1.25:1 against ivory). This sits at ~2.6:1:
+     a visible field boundary without the heavy grey border of a decade ago. */
+  --color-line-control: #a39b8f;
+  --color-ink: #14110f;
+  --color-ink-soft: #55504b;
+  --color-ink-muted: #6f6862;
+  --color-brass: #8a5a2b;
+  --color-brass-soft: #b98a53;
+  --color-brass-deep: #5f3d1c;
+  --color-oxide: #6f6d6b;
+  --color-oxide-soft: #a8a5a2;
+  --color-rose: #b03a33;
+  --color-olive: #3f6b46;
+
+  /* System UI stack for everything: no webfont request, no serif UI headings.
+     This single change re-types ~30 `.ox-display` headings across the app. */
+  --font-display: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --radius-card: 0.875rem;
+
+  /* Borders carry the structure; shadows are reserved for floating layers. */
+  --shadow-soft: 0 1px 2px rgb(20 17 15 / 0.04);
+  --shadow-lift: 0 10px 30px -12px rgb(20 17 15 / 0.22);
+}
+
+/* ---------------------------------------------------------------------------
+   Base. Layered so Tailwind utilities can always override anything below.
+   --------------------------------------------------------------------------- */
+@layer base {
+  html {
+    color-scheme: light;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100%;
+    background-color: var(--color-ivory);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-brass);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 2px;
+  }
+
+  /* -------------------------------------------------------------------------
+     Scrollbars. The platform default — square opaque thumb, arrow steppers,
+     light track — is the most dated surface left in the product, and it showed
+     up on the page, the product rails, the admin tables and every overflow
+     panel. Themed once here so all of them move together.
+
+     Firefox reads `scrollbar-width`/`scrollbar-color`; Chromium and Safari use
+     the `::-webkit-scrollbar` pseudo-elements. The transparent border plus
+     `background-clip: content-box` insets the thumb so it reads as a floating
+     pill instead of a solid bar filling the gutter.
+     ------------------------------------------------------------------------- */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--color-brass) 50%, transparent) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--color-brass) 50%, transparent);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--color-brass) 80%, transparent);
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background-color: var(--color-brass-deep);
+  }
+
+  /* Chromium draws square stepper buttons on both ends by default. */
+  ::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Design system.
+
+   Everything below MUST live in the `components` layer. Tailwind's `utilities`
+   layer is declared after `components`, so a utility like `text-ivory` on an
+   `ox-btn--outline` correctly wins. Unlayered rules would beat every utility and
+   silently break dark-section overrides.
+   --------------------------------------------------------------------------- */
+@layer components {
+  .ox-container {
+    width: 100%;
+    max-width: 84rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .ox-container {
+      padding-inline: 2rem;
+    }
+  }
+
+  .ox-display {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.022em;
+  }
+
+  .ox-eyebrow {
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-brass);
+    font-weight: 600;
+  }
+
+  /* --- Buttons ----------------------------------------------------------- */
+  .ox-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.7rem;
+    border: 1px solid transparent;
+    padding: 0.62rem 1.15rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease,
+      transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .ox-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .ox-btn:not(:disabled):active {
+    transform: translateY(1px);
+  }
+
+  .ox-btn--primary {
+    background-color: var(--color-ink);
+    color: var(--color-ivory);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .ox-btn--primary:not(:disabled):hover {
+    background-color: var(--color-brass-deep);
+  }
+
+  .ox-btn--brass {
+    background-color: var(--color-brass);
+    color: #fff;
+  }
+
+  .ox-btn--brass:not(:disabled):hover {
+    background-color: var(--color-brass-deep);
+  }
+
+  .ox-btn--outline {
+    border-color: var(--color-sand-deep);
+    background-color: transparent;
+    color: var(--color-ink);
+  }
+
+  .ox-btn--outline:not(:disabled):hover {
+    border-color: var(--color-brass);
+    color: var(--color-brass);
+    background-color: color-mix(in srgb, var(--color-brass) 7%, transparent);
+  }
+
+  .ox-btn--ghost {
+    background-color: transparent;
+    color: var(--color-ink-soft);
+  }
+
+  .ox-btn--ghost:not(:disabled):hover {
+    background-color: color-mix(in srgb, var(--color-ink) 6%, transparent);
+    color: var(--color-ink);
+  }
+
+  .ox-btn--danger {
+    background-color: var(--color-rose);
+    color: #fff;
+  }
+
+  .ox-btn--sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8125rem;
+    border-radius: 0.6rem;
+  }
+
+  .ox-btn--lg {
+    padding: 0.85rem 1.6rem;
+    font-size: 0.9375rem;
+    border-radius: 0.8rem;
+  }
+
+  .ox-btn--block {
+    width: 100%;
+  }
+
+  /* --- Surfaces ---------------------------------------------------------- */
+  .ox-card {
+    background-color: var(--color-paper);
+    border: 1px solid var(--color-sand-deep);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .ox-panel {
+    background-color: var(--color-paper);
+    border: 1px solid var(--color-sand-deep);
+    border-radius: 0.75rem;
+  }
+
+  /* --- Forms ------------------------------------------------------------- */
+  .ox-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+    margin-bottom: 0.35rem;
+  }
+
+  .ox-input,
+  .ox-select,
+  .ox-textarea {
+    width: 100%;
+    border-radius: 0.55rem;
+    border: 1px solid var(--color-line-control);
+    background-color: var(--color-paper);
+    padding: 0.6rem 0.8rem;
+    font-size: 0.875rem;
+    color: var(--color-ink);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .ox-input::placeholder,
+  .ox-textarea::placeholder {
+    color: var(--color-ink-muted);
+  }
+
+  .ox-input:focus,
+  .ox-select:focus,
+  .ox-textarea:focus {
+    border-color: var(--color-brass);
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brass) 18%, transparent);
+  }
+
+  .ox-input[aria-invalid='true'],
+  .ox-textarea[aria-invalid='true'] {
+    border-color: var(--color-rose);
+  }
+
+  .ox-field-error {
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--color-rose);
+  }
+
+  .ox-help {
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--color-ink-muted);
+  }
+
+  .ox-checkbox {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--color-brass);
+  }
+
+  /* --- Badges & chips ---------------------------------------------------- */
+  .ox-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 999px;
+    padding: 0.18rem 0.6rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .ox-badge--neutral {
+    background-color: color-mix(in srgb, var(--color-oxide) 14%, transparent);
+    color: var(--color-ink-soft);
+  }
+
+  .ox-badge--info {
+    background-color: color-mix(in srgb, #2f6fb0 16%, transparent);
+    color: #22537f;
+  }
+
+  .ox-badge--progress {
+    background-color: color-mix(in srgb, var(--color-brass) 18%, transparent);
+    color: var(--color-brass-deep);
+  }
+
+  .ox-badge--success {
+    background-color: color-mix(in srgb, var(--color-olive) 18%, transparent);
+    color: #33512f;
+  }
+
+  .ox-badge--danger {
+    background-color: color-mix(in srgb, var(--color-rose) 16%, transparent);
+    color: #7c2f2a;
+  }
+
+  /* Solid tones for badges that sit directly on photography. The translucent
+     `--danger` / `--progress` fills above are fine on paper but disappear over a
+     busy product image, so image overlays use these opaque variants instead. */
+  .ox-badge--cut {
+    background-color: var(--color-rose);
+    color: #fff;
+    box-shadow: 0 1px 4px rgb(20 17 15 / 0.3);
+  }
+
+  .ox-badge--tag {
+    background-color: var(--color-brass);
+    color: #fff;
+    box-shadow: 0 1px 4px rgb(20 17 15 / 0.3);
+  }
+
+  .ox-badge--sold {
+    background-color: var(--color-ink);
+    color: var(--color-ivory);
+    box-shadow: 0 1px 4px rgb(20 17 15 / 0.3);
+  }
+
+  .ox-badge--fresh {
+    background-color: var(--color-olive);
+    color: #fff;
+    box-shadow: 0 1px 4px rgb(20 17 15 / 0.3);
+  }
+
+  .ox-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-line-control);
+    background-color: var(--color-paper);
+    padding: 0.3rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--color-ink-soft);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .ox-chip:hover {
+    border-color: var(--color-brass-soft);
+  }
+
+  .ox-chip[aria-pressed='true'] {
+    background-color: var(--color-ink);
+    border-color: var(--color-ink);
+    color: var(--color-ivory);
+  }
+
+  /* --- Skeletons & motion ------------------------------------------------ */
+  .ox-skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: color-mix(in srgb, var(--color-sand) 70%, transparent);
+    border-radius: 0.5rem;
+  }
+
+  .ox-skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, #fff 65%, transparent),
+      transparent
+    );
+    animation: ox-shimmer 1.4s infinite;
+  }
+
+  .ox-fade-up {
+    animation: ox-fade-up 0.5s ease both;
+  }
+
+  .ox-spinner {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+    border-top-color: currentColor;
+    animation: ox-spin 0.7s linear infinite;
+  }
+
+  /* --- Motion ------------------------------------------------------------
+     Every `@defer` block's content gets `.ox-reveal`, so deferred sections fade
+     and rise into place instead of popping in. Grids use `.ox-stagger` so their
+     children arrive in sequence.
+     ---------------------------------------------------------------------- */
+  .ox-reveal {
+    animation: ox-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .ox-slide-down {
+    animation: ox-slide-down 0.18s ease-out both;
+    transform-origin: top center;
+  }
+
+  .ox-pop {
+    animation: ox-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  .ox-ken-burns {
+    animation: ox-ken-burns 9s ease-out both;
+  }
+
+  .ox-stagger > * {
+    animation: ox-reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .ox-stagger > *:nth-child(1) { animation-delay: 0.03s; }
+  .ox-stagger > *:nth-child(2) { animation-delay: 0.07s; }
+  .ox-stagger > *:nth-child(3) { animation-delay: 0.11s; }
+  .ox-stagger > *:nth-child(4) { animation-delay: 0.15s; }
+  .ox-stagger > *:nth-child(5) { animation-delay: 0.19s; }
+  .ox-stagger > *:nth-child(6) { animation-delay: 0.23s; }
+  .ox-stagger > *:nth-child(7) { animation-delay: 0.27s; }
+  .ox-stagger > *:nth-child(8) { animation-delay: 0.31s; }
+  .ox-stagger > *:nth-child(9) { animation-delay: 0.35s; }
+  .ox-stagger > *:nth-child(10) { animation-delay: 0.39s; }
+  .ox-stagger > *:nth-child(11) { animation-delay: 0.43s; }
+  .ox-stagger > *:nth-child(n + 12) { animation-delay: 0.47s; }
+
+  /* Staggered children of the hero copy, replayed on every slide change. */
+  .ox-hero-copy > * {
+    animation: ox-reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .ox-hero-copy > *:nth-child(1) { animation-delay: 0.05s; }
+  .ox-hero-copy > *:nth-child(2) { animation-delay: 0.16s; }
+  .ox-hero-copy > *:nth-child(3) { animation-delay: 0.27s; }
+  .ox-hero-copy > *:nth-child(4) { animation-delay: 0.38s; }
+
+  /* --- Long-form CMS content --------------------------------------------- */
+  .ox-prose {
+    color: var(--color-ink-soft);
+    line-height: 1.75;
+    font-size: 0.9375rem;
+  }
+
+  .ox-prose h2 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--color-ink);
+    margin: 1.75rem 0 0.75rem;
+  }
+
+  .ox-prose h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin: 1.25rem 0 0.5rem;
+  }
+
+  .ox-prose p {
+    margin-bottom: 0.9rem;
+  }
+
+  .ox-prose ul,
+  .ox-prose ol {
+    margin: 0 0 1rem 1.25rem;
+    list-style: disc;
+  }
+
+  .ox-prose ol {
+    list-style: decimal;
+  }
+
+  .ox-prose li {
+    margin-bottom: 0.4rem;
+  }
+
+  .ox-prose a {
+    color: var(--color-brass);
+    text-decoration: underline;
+  }
+
+  .ox-admin-shell {
+    background-color: #f6f3ee;
+  }
+
+  /* --- Page scaffolding --------------------------------------------------
+     Shared primitives so every page has the same rhythm and heading scale.
+     These replaced ad-hoc `space-y-5` / `space-y-6` and four different title
+     class stacks across the admin pages, which made the header jump around
+     when moving between screens.
+     ---------------------------------------------------------------------- */
+  .ox-page > * + * {
+    margin-top: 1.5rem;
+  }
+
+  .ox-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .ox-page-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    color: var(--color-ink);
+  }
+
+  @media (min-width: 640px) {
+    .ox-page-title {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
+  }
+
+  /* --- Toasts ------------------------------------------------------------
+     Each tone gets a left accent bar, a filled icon chip and a faint wash, so
+     success/error/info are distinguishable at a glance rather than only by a
+     border colour. The bar shows how long is left and freezes on hover.
+     ---------------------------------------------------------------------- */
+  .ox-toast-host {
+    position: fixed;
+    z-index: 60;
+    inset-inline: 0;
+    bottom: 1rem;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 0.625rem;
+    padding-inline: 1rem;
+    pointer-events: none;
+  }
+
+  @media (min-width: 640px) {
+    .ox-toast-host {
+      inset-inline: auto 1.5rem;
+      bottom: 1.5rem;
+      align-items: flex-end;
+      width: min(25rem, calc(100vw - 3rem));
+      padding-inline: 0;
+    }
+  }
+
+  .ox-toast {
+    --ox-toast-accent: var(--color-brass);
+    position: relative;
+    overflow: hidden;
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    width: 100%;
+    max-width: 25rem;
+    padding: 0.8rem 0.85rem 0.95rem 1.05rem;
+    border-radius: 0.85rem;
+    border: 1px solid
+      color-mix(in srgb, var(--ox-toast-accent) 32%, var(--color-sand-deep));
+    background-color: color-mix(in srgb, var(--ox-toast-accent) 5%, var(--color-paper));
+    box-shadow: var(--shadow-lift);
+    animation: ox-toast-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .ox-toast::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 4px;
+    background-color: var(--ox-toast-accent);
+  }
+
+  .ox-toast--success {
+    --ox-toast-accent: var(--color-olive);
+  }
+
+  .ox-toast--error {
+    --ox-toast-accent: var(--color-rose);
+  }
+
+  .ox-toast--info {
+    --ox-toast-accent: var(--color-brass);
+  }
+
+  .ox-toast__icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    margin-top: 0.02rem;
+    border-radius: 999px;
+    background-color: var(--ox-toast-accent);
+    color: #fff;
+  }
+
+  .ox-toast__message {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--color-ink);
+    overflow-wrap: anywhere;
+  }
+
+  .ox-toast__close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    color: var(--color-ink-muted);
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .ox-toast__close:hover {
+    background-color: color-mix(in srgb, var(--color-ink) 9%, transparent);
+    color: var(--color-ink);
+  }
+
+  .ox-toast__bar {
+    position: absolute;
+    inset-inline-start: 0;
+    bottom: 0;
+    width: 100%;
+    height: 3px;
+    transform-origin: left center;
+    transform: scaleX(1);
+    background-color: var(--ox-toast-accent);
+    opacity: 0.4;
+    animation-name: ox-toast-progress;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+  }
+
+  .ox-toast:hover .ox-toast__bar {
+    animation-play-state: paused;
+  }
+
+  /* --- Media tile controls ------------------------------------------------
+     Icon buttons that sit over a photo. Always visible and opaque enough to read
+     against any image, unlike the hover-revealed overlay they replaced.
+     ---------------------------------------------------------------------- */
+  .ox-media-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    cursor: pointer;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+    background-color: color-mix(in srgb, var(--color-paper) 94%, transparent);
+    color: var(--color-ink-soft);
+    box-shadow: 0 1px 2px rgb(31 26 23 / 0.18), 0 6px 16px -8px rgb(31 26 23 / 0.4);
+    backdrop-filter: blur(3px);
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .ox-media-btn:hover {
+    background-color: var(--color-ink);
+    border-color: var(--color-ink);
+    color: var(--color-ivory);
+    transform: scale(1.06);
+  }
+
+  .ox-media-btn--danger:hover {
+    background-color: var(--color-rose);
+    border-color: var(--color-rose);
+    color: #fff;
+  }
+
+  .ox-media-btn:focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes ox-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes ox-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ox-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ox-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ox-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ox-pop {
+  0% {
+    transform: scale(0.55);
+  }
+  60% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes ox-ken-burns {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.09) translate3d(1.4%, -1%, 0);
+  }
+}
+
+@keyframes ox-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ox-toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes ox-vt-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ox-vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Page transitions (router `withViewTransitions()`). Browsers without the
+   View Transitions API simply navigate instantly.
+   --------------------------------------------------------------------------- */
+::view-transition-old(root) {
+  animation: ox-vt-out 0.16s ease both;
+}
+
+::view-transition-new(root) {
+  animation: ox-vt-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The sticky header should stay put rather than slide with the page. */
+::view-transition-old(site-header),
+::view-transition-new(site-header) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion wins over everything above: this block is deliberately
+   unlayered so it outranks the `components` layer.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .ox-fade-up,
+  .ox-reveal,
+  .ox-slide-down,
+  .ox-pop,
+  .ox-ken-burns,
+  .ox-toast,
+  .ox-spinner,
+  .ox-stagger > *,
+  .ox-hero-copy > *,
+  .ox-skeleton::after {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}

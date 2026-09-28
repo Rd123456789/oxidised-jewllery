@@ -1,0 +1,60 @@
+<div class="bg-ivory">
+  <div class="ox-container py-20 text-center lg:py-28">
+    <p class="ox-eyebrow">Error 404</p>
+    <h1 class="ox-display mt-3 text-5xl leading-none text-ink sm:text-7xl">
+      Lost the thread?
+    </h1>
+    <p class="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-ink-soft">
+      The piece or page you were looking for is not here. It may have sold out, moved, or the link
+      was mistyped. Let us point you back to something beautiful.
+    </p>
+
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a class="ox-btn ox-btn--primary" routerLink="/shop">
+        <app-icon name="bag" [size]="15" />
+        Shop the range
+      </a>
+      <a class="ox-btn ox-btn--outline" routerLink="/collections">Browse collections</a>
+      <a class="ox-btn ox-btn--ghost" routerLink="/track-order">Track an order</a>
+    </div>
+  </div>
+
+  @defer (on viewport) {
+    <section class="ox-container pb-20 lg:pb-28 ox-reveal">
+      <header class="mb-6 text-center">
+        <p class="ox-eyebrow">In the meantime</p>
+        <h2 class="ox-display mt-1 text-2xl text-ink">A few favourites</h2>
+      </header>
+
+      @if (loading()) {
+        <app-skeleton-grid [count]="4" [columns]="4" />
+      } @else if (products().length === 0) {
+        <p class="text-center text-sm text-ink-soft">
+          Browse the <a routerLink="/shop" class="underline">shop</a> for the full range.
+        </p>
+      } @else {
+        <div class="grid grid-cols-2 gap-5 lg:grid-cols-4">
+          @for (product of products(); track product.id) {
+            <app-product-card [product]="product" />
+          }
+        </div>
+      }
+    </section>
+  } @placeholder {
+    <div class="ox-container pb-20 lg:pb-28">
+      <div class="grid grid-cols-2 gap-5 lg:grid-cols-4">
+        @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+          <div class="ox-skeleton aspect-[4/5] rounded-2xl"></div>
+        }
+      </div>
+    </div>
+  } @loading (minimum 200ms) {
+    <div class="ox-container grid place-items-center pb-20">
+      <span class="ox-spinner"></span>
+    </div>
+  } @error {
+    <p class="ox-container pb-20 text-center text-sm text-ink-soft">
+      Suggestions are unavailable right now.
+    </p>
+  }
+</div>

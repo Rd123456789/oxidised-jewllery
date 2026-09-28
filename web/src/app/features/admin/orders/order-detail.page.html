@@ -1,0 +1,392 @@
+@if (order(); as order) {
+  <div class="ox-page">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <a routerLink="/admin/orders" class="inline-flex items-center gap-1 text-xs font-semibold text-brass hover:underline">
+          <app-icon name="chevron-left" [size]="13" />
+          All orders
+        </a>
+        <h1 class="ox-page-title mt-2">{{ order.orderNumber }}</h1>
+        <div class="mt-2 flex flex-wrap items-center gap-3 text-sm text-ink-soft">
+          <span>Placed {{ formatDateTime(order.placedAt) }}</span>
+          <app-status-badge [label]="titleCase(order.status)" [tone]="orderStatusTone(order.status)" />
+          <app-status-badge
+            [label]="'Payment · ' + titleCase(order.payment.status)"
+            [tone]="paymentStatusTone(order.payment.status)"
+          />
+        </div>
+        <p class="mt-1 text-xs text-ink-muted">
+          @if (order.invoiceNumber) {
+            Invoice {{ order.invoiceNumber }} · use your browser print dialog to save a PDF.
+          } @else {
+            Invoice is issued once payment is captured.
+          }
+        </p>
+      </div>
+      <button type="button" class="ox-btn ox-btn--outline" (click)="print()">
+        <app-icon name="page" [size]="15" />
+        Print order
+      </button>
+    </div>
+
+    <div class="grid gap-5 lg:grid-cols-3">
+      <div class="space-y-5 lg:col-span-2">
+        <section class="ox-card overflow-hidden">
+          <h2 class="border-b border-sand-deep/60 px-4 py-3 font-display text-lg text-ink">Items</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[36rem] border-collapse text-sm">
+              <thead>
+                <tr class="bg-sand/60 text-xs uppercase tracking-wide text-ink-muted">
+                  <th class="px-4 py-2.5 text-left font-semibold">Product</th>
+                  <th class="px-4 py-2.5 text-right font-semibold">Unit price</th>
+                  <th class="px-4 py-2.5 text-center font-semibold">Qty</th>
+                  <th class="px-4 py-2.5 text-right font-semibold">Line total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of order.items; track $index) {
+                  <tr class="border-t border-sand-deep/50">
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-3">
+                        @if (item.image) {
+                          <img
+                            [src]="item.image"
+                            [alt]="item.name"
+                            class="h-12 w-12 shrink-0 rounded-lg border border-sand-deep object-cover"
+                            loading="lazy"
+                          />
+                        } @else {
+                          <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-sand text-ink-muted">
+                            <app-icon name="box" [size]="18" />
+                          </span>
+                        }
+                        <div class="min-w-0">
+                          <span class="block font-medium text-ink">{{ item.name }}</span>
+                          <span class="block text-xs text-ink-muted">SKU {{ item.sku }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-right text-ink-soft">
+                      {{ formatCurrency(item.unitPrice, order.pricing.currency) }}
+                    </td>
+                    <td class="px-4 py-3 text-center text-ink-soft">{{ item.quantity }}</td>
+                    <td class="px-4 py-3 text-right font-semibold text-ink">
+                      {{ formatCurrency(item.lineTotal, order.pricing.currency) }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="border-t border-sand-deep/60 px-4 py-4">
+            <dl class="ml-auto max-w-xs space-y-1.5 text-sm">
+              <div class="flex justify-between">
+                <dt class="text-ink-soft">Subtotal</dt>
+                <dd class="text-ink">{{ formatCurrency(order.pricing.subtotal, order.pricing.currency) }}</dd>
+              </div>
+              @if (order.pricing.discount > 0) {
+                <div class="flex justify-between">
+                  <dt class="text-ink-soft">
+                    Discount
+                    @if (order.pricing.couponCode) {
+                      <span class="text-xs text-brass">({{ order.pricing.couponCode }})</span>
+                    }
+                  </dt>
+                  <dd class="text-olive">
+                    −{{ formatCurrency(order.pricing.discount, order.pricing.currency) }}
+                  </dd>
+                </div>
+              }
+              <div class="flex justify-between">
+                <dt class="text-ink-soft">Shipping</dt>
+                <dd class="text-ink">
+                  @if (order.pricing.freeShipping) {
+                    Free
+                  } @else {
+                    {{ formatCurrency(order.pricing.shippingFee, order.pricing.currency) }}
+                  }
+                </dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-ink-soft">Tax</dt>
+                <dd class="text-ink">{{ formatCurrency(order.pricing.taxAmount, order.pricing.currency) }}</dd>
+              </div>
+              <div class="flex justify-between border-t border-sand-deep/60 pt-2 text-base font-semibold">
+                <dt class="text-ink">Total</dt>
+                <dd class="text-ink">{{ formatCurrency(order.pricing.total, order.pricing.currency) }}</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+
+        <section class="ox-card p-4">
+          <h2 class="font-display text-lg text-ink">Timeline</h2>
+          @if (order.statusHistory.length === 0) {
+            <p class="mt-2 text-sm text-ink-muted">No status history recorded yet.</p>
+          } @else {
+            <ol class="mt-4 space-y-4 border-l border-sand-deep pl-4">
+              @for (entry of order.statusHistory; track $index) {
+                <li class="relative">
+                  <span class="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-brass"></span>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <app-status-badge [label]="titleCase(entry.status)" [tone]="orderStatusTone(entry.status)" />
+                    <span class="text-xs text-ink-muted">{{ formatDateTime(entry.changedAt) }}</span>
+                  </div>
+                  @if (entry.note) {
+                    <p class="mt-1 text-sm text-ink-soft">{{ entry.note }}</p>
+                  }
+                </li>
+              }
+            </ol>
+          }
+        </section>
+      </div>
+
+      <div class="space-y-5">
+        <section class="ox-card p-4">
+          <h2 class="font-display text-lg text-ink">Customer</h2>
+          <div class="mt-3 space-y-1 text-sm">
+            <p class="font-medium text-ink">{{ order.customerName }}</p>
+            <p class="text-ink-soft">{{ order.customerPhone }}</p>
+            <p class="text-ink-soft">{{ customerEmail() }}</p>
+          </div>
+
+          <h3 class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink-muted">Shipping address</h3>
+          <address class="mt-1 text-sm not-italic leading-relaxed text-ink-soft">
+            @for (line of addressLines(order.shippingAddress); track $index) {
+              <span class="block">{{ line }}</span>
+            }
+          </address>
+
+          @if (showBilling()) {
+            <h3 class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink-muted">Billing address</h3>
+            <address class="mt-1 text-sm not-italic leading-relaxed text-ink-soft">
+              @for (line of addressLines(order.billingAddress); track $index) {
+                <span class="block">{{ line }}</span>
+              }
+            </address>
+          }
+
+          @if (order.customerNote) {
+            <h3 class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink-muted">Customer note</h3>
+            <p class="mt-1 rounded-lg bg-sand/50 p-3 text-sm text-ink-soft">{{ order.customerNote }}</p>
+          }
+        </section>
+
+        <section class="ox-card p-4">
+          <h2 class="font-display text-lg text-ink">Status</h2>
+          <div class="mt-3 space-y-3">
+            <div>
+              <label class="ox-label" for="detail-status">Order status</label>
+              <select
+                id="detail-status"
+                class="ox-select"
+                [ngModel]="statusForm().status"
+                (ngModelChange)="patchStatus({ status: $event })"
+              >
+                @for (status of statuses; track status) {
+                  <option [value]="status" [disabled]="!isStatusAllowed(status)">
+                    {{ titleCase(status) }}
+                  </option>
+                }
+              </select>
+              @if (allowedNext().length > 0) {
+                <p class="ox-help">
+                  Allowed next:
+                  @for (status of allowedNext(); track status; let last = $last) {
+                    {{ titleCase(status) }}{{ last ? '' : ', ' }}
+                  }
+                </p>
+              } @else {
+                <p class="ox-help">This order is in a terminal state.</p>
+              }
+            </div>
+
+            @if (statusForm().status === 'cancelled') {
+              <div>
+                <label class="ox-label" for="detail-cancel-reason">Cancellation reason</label>
+                <input
+                  id="detail-cancel-reason"
+                  type="text"
+                  class="ox-input"
+                  [ngModel]="statusForm().cancelReason"
+                  (ngModelChange)="patchStatus({ cancelReason: $event })"
+                />
+              </div>
+            }
+
+            <div>
+              <label class="ox-label" for="detail-payment-status">Payment status</label>
+              <select
+                id="detail-payment-status"
+                class="ox-select"
+                [ngModel]="statusForm().paymentStatus"
+                (ngModelChange)="patchStatus({ paymentStatus: $event })"
+              >
+                @for (status of paymentStatuses; track status) {
+                  <option [value]="status">{{ titleCase(status) }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label class="ox-label" for="detail-note">Internal note (timeline)</label>
+              <textarea
+                id="detail-note"
+                rows="3"
+                class="ox-textarea"
+                placeholder="Optional note recorded with this status change"
+                [ngModel]="statusForm().note"
+                (ngModelChange)="patchStatus({ note: $event })"
+              ></textarea>
+            </div>
+
+            <button type="button" class="ox-btn ox-btn--primary ox-btn--block" [disabled]="saving()" (click)="saveStatus()">
+              {{ saving() ? 'Saving…' : 'Save status' }}
+            </button>
+          </div>
+        </section>
+
+        <section class="ox-card p-4">
+          <h2 class="font-display text-lg text-ink">Tracking</h2>
+          <div class="mt-3 space-y-3">
+            <div>
+              <label class="ox-label" for="detail-carrier">Carrier</label>
+              <input
+                id="detail-carrier"
+                type="text"
+                class="ox-input"
+                placeholder="Delhivery, BlueDart…"
+                [ngModel]="trackingForm().carrier"
+                (ngModelChange)="patchTracking({ carrier: $event })"
+              />
+            </div>
+            <div>
+              <label class="ox-label" for="detail-tracking-number">Tracking number</label>
+              <input
+                id="detail-tracking-number"
+                type="text"
+                class="ox-input"
+                [ngModel]="trackingForm().trackingNumber"
+                (ngModelChange)="patchTracking({ trackingNumber: $event })"
+              />
+            </div>
+            <div>
+              <label class="ox-label" for="detail-tracking-url">Tracking URL</label>
+              <input
+                id="detail-tracking-url"
+                type="url"
+                class="ox-input"
+                placeholder="https://…"
+                [ngModel]="trackingForm().trackingUrl"
+                (ngModelChange)="patchTracking({ trackingUrl: $event })"
+              />
+            </div>
+
+            @if (trackingLink(); as link) {
+              <a class="inline-flex items-center gap-1 text-sm font-semibold text-brass hover:underline" [href]="link" target="_blank" rel="noopener">
+                Open tracking page
+                <app-icon name="arrow-right" [size]="14" />
+              </a>
+            }
+
+            <button
+              type="button"
+              class="ox-btn ox-btn--outline ox-btn--block"
+              [disabled]="savingTracking()"
+              (click)="saveTracking()"
+            >
+              {{ savingTracking() ? 'Saving…' : allowedNext().includes('shipped') ? 'Mark shipped' : 'Save tracking' }}
+            </button>
+          </div>
+        </section>
+
+        <section class="ox-card p-4">
+          <h2 class="font-display text-lg text-ink">Admin notes</h2>
+          <textarea
+            rows="4"
+            class="ox-textarea mt-3"
+            aria-label="Admin notes"
+            placeholder="Private notes visible to the team only"
+            [ngModel]="adminNote()"
+            (ngModelChange)="adminNote.set($event)"
+          ></textarea>
+          <button
+            type="button"
+            class="ox-btn ox-btn--outline ox-btn--block mt-3"
+            [disabled]="savingNote()"
+            (click)="saveAdminNote()"
+          >
+            {{ savingNote() ? 'Saving…' : 'Save note' }}
+          </button>
+        </section>
+      </div>
+    </div>
+
+    @defer (on viewport) {
+      <section class="ox-card p-4 ox-reveal">
+        <h2 class="font-display text-lg text-ink">Customer history</h2>
+        @if (historyLoading()) {
+          <div class="mt-3 space-y-2">
+            @for (placeholder of [1, 2, 3]; track placeholder) {
+              <div class="ox-skeleton h-10 w-full"></div>
+            }
+          </div>
+        } @else if (history(); as customerHistory) {
+          <div class="mt-3 flex flex-wrap gap-4 text-sm">
+            <span class="ox-badge ox-badge--neutral">{{ customerHistory.stats.orderCount }} orders</span>
+            <span class="ox-badge ox-badge--progress">
+              {{ formatCurrency(customerHistory.stats.lifetimeValue) }} lifetime
+            </span>
+          </div>
+          @if (customerHistory.orders.length === 0) {
+            <p class="mt-3 text-sm text-ink-muted">No other orders for this customer.</p>
+          } @else {
+            <ul class="mt-3 divide-y divide-sand-deep/50">
+              @for (past of customerHistory.orders; track past.id) {
+                <li class="flex items-center justify-between gap-3 py-2 text-sm">
+                  <a class="font-medium text-brass hover:underline" [routerLink]="['/admin/orders', past.orderNumber]">
+                    {{ past.orderNumber }}
+                  </a>
+                  <span class="text-xs text-ink-muted">{{ formatDateTime(past.placedAt) }}</span>
+                  <span class="ml-auto font-semibold text-ink">
+                    {{ formatCurrency(past.pricing.total, past.pricing.currency) }}
+                  </span>
+                  <app-status-badge [label]="titleCase(past.status)" [tone]="orderStatusTone(past.status)" />
+                </li>
+              }
+            </ul>
+          }
+        } @else {
+          <p class="mt-3 text-sm text-ink-muted">No linked customer account for this order.</p>
+        }
+      </section>
+    } @placeholder {
+      <div class="ox-card p-4">
+        <div class="ox-skeleton h-5 w-40"></div>
+        <div class="ox-skeleton mt-3 h-10 w-full"></div>
+      </div>
+    } @loading (minimum 200ms) {
+      <div class="ox-card grid place-items-center p-8">
+        <span class="ox-spinner"></span>
+      </div>
+    } @error {
+      <div class="ox-card p-4 text-sm text-ink-soft">Customer history could not be loaded.</div>
+    }
+  </div>
+} @else if (failed()) {
+  <div class="ox-card flex flex-col items-center gap-3 px-6 py-14 text-center">
+    <span class="flex h-11 w-11 items-center justify-center rounded-full bg-rose/10 text-rose">
+      <app-icon name="alert" [size]="20" />
+    </span>
+    <p class="text-sm text-ink-soft">This order could not be loaded.</p>
+    <a class="ox-btn ox-btn--outline ox-btn--sm" routerLink="/admin/orders">Back to orders</a>
+  </div>
+} @else {
+  <div class="space-y-4">
+    <div class="ox-skeleton h-8 w-48"></div>
+    <div class="ox-skeleton h-64 w-full"></div>
+    <div class="ox-skeleton h-40 w-full"></div>
+  </div>
+}

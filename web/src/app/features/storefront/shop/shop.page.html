@@ -1,0 +1,319 @@
+<div class="bg-ivory">
+  <div class="ox-container py-6 lg:py-10">
+    <nav class="flex flex-wrap items-center gap-1.5 text-xs text-ink-muted" aria-label="Breadcrumb">
+      <a routerLink="/" class="hover:text-brass">Home</a>
+      <app-icon name="chevron-right" [size]="12" />
+      <a routerLink="/shop" class="hover:text-brass">Shop</a>
+      @if (activeCategory(); as category) {
+        <app-icon name="chevron-right" [size]="12" />
+        <span class="text-ink-soft">{{ category.name }}</span>
+      } @else if (filters().q) {
+        <app-icon name="chevron-right" [size]="12" />
+        <span class="text-ink-soft">Search “{{ filters().q }}”</span>
+      }
+    </nav>
+
+    <header class="mt-4">
+      <p class="ox-eyebrow">
+        {{ activeCategory()?.name ?? (filters().q ? 'Search results' : 'The full range') }}
+      </p>
+      <h1 class="ox-page-title mt-1">
+        {{ activeCategory()?.name ?? (filters().q ? 'Search results' : 'Shop all pieces') }}
+      </h1>
+    </header>
+
+    <div class="mt-6 lg:grid lg:grid-cols-[17rem_1fr] lg:gap-8">
+      @if (filtersOpen()) {
+        <button
+          type="button"
+          class="fixed inset-0 z-30 bg-ink/40 lg:hidden"
+          aria-label="Close filters"
+          (click)="filtersOpen.set(false)"
+        ></button>
+      }
+
+      <aside
+        class="fixed inset-y-0 left-0 z-40 w-[19rem] max-w-[85vw] -translate-x-full overflow-y-auto border-r border-sand-deep/60 bg-paper p-5 transition-transform lg:sticky lg:top-24 lg:z-0 lg:max-h-[calc(100vh-7rem)] lg:w-auto lg:translate-x-0 lg:rounded-2xl lg:border lg:border-sand-deep/60"
+        [class.translate-x-0]="filtersOpen()"
+        aria-label="Product filters"
+      >
+        <div class="mb-2 flex items-center justify-between gap-2">
+          <h2 class="font-display text-lg text-ink">Filters</h2>
+          <div class="flex items-center gap-1">
+            <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" (click)="clearAll()">
+              Clear all
+            </button>
+            <button
+              type="button"
+              class="ox-btn ox-btn--outline ox-btn--sm lg:hidden"
+              aria-label="Close filters"
+              (click)="filtersOpen.set(false)"
+            >
+              <app-icon name="close" [size]="14" />
+            </button>
+          </div>
+        </div>
+
+        <fieldset class="border-t border-sand-deep/50 py-4">
+          <legend class="ox-label mb-2">Category</legend>
+          <div class="flex flex-col gap-1">
+            <button
+              type="button"
+              class="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition"
+              [class]="filters().category === null ? 'bg-sand/70 font-semibold text-ink' : 'text-ink-soft hover:bg-sand/40'"
+              (click)="selectCategory(null)"
+            >
+              All pieces
+            </button>
+            @for (category of categories(); track category.id) {
+              <button
+                type="button"
+                class="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition"
+                [class]="filters().category === category.slug ? 'bg-sand/70 font-semibold text-ink' : 'text-ink-soft hover:bg-sand/40'"
+                (click)="selectCategory(category.slug)"
+              >
+                <span>{{ category.name }}</span>
+                <span class="text-[0.6875rem] text-ink-muted">{{ category.productCount }}</span>
+              </button>
+            }
+          </div>
+        </fieldset>
+
+        @if (filters().collection; as collection) {
+          <div class="border-t border-sand-deep/50 py-4">
+            <p class="ox-label mb-2">Collection</p>
+            <button
+              type="button"
+              class="ox-chip"
+              aria-pressed="true"
+              (click)="selectCollection(null)"
+            >
+              {{ collection }}
+              <app-icon name="close" [size]="12" />
+            </button>
+          </div>
+        }
+
+        <fieldset class="border-t border-sand-deep/50 py-4">
+          <legend class="ox-label mb-2">Price range</legend>
+          <div class="flex items-end gap-2">
+            <div class="flex-1">
+              <label class="ox-label" for="shop-min-price">Min (₹)</label>
+              <input
+                id="shop-min-price"
+                type="number"
+                min="0"
+                class="ox-input"
+                placeholder="0"
+                [value]="minPriceInput()?.toString() ?? ''"
+                (input)="onMinPrice($event)"
+              />
+            </div>
+            <span class="pb-2 text-ink-muted">–</span>
+            <div class="flex-1">
+              <label class="ox-label" for="shop-max-price">Max (₹)</label>
+              <input
+                id="shop-max-price"
+                type="number"
+                min="0"
+                class="ox-input"
+                placeholder="Any"
+                [value]="maxPriceInput()?.toString() ?? ''"
+                (input)="onMaxPrice($event)"
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            class="ox-btn ox-btn--outline ox-btn--sm ox-btn--block mt-3"
+            (click)="applyPrice()"
+          >
+            Apply price
+          </button>
+        </fieldset>
+
+        @if (facets(); as facetOptions) {
+          @if (facetOptions.colors.length > 0) {
+            <fieldset class="border-t border-sand-deep/50 py-4">
+              <legend class="ox-label mb-2">Colour</legend>
+              <div class="flex flex-wrap gap-2">
+                @for (color of facetOptions.colors; track color) {
+                  <button
+                    type="button"
+                    class="ox-chip"
+                    [attr.aria-pressed]="isSelected('colors', color)"
+                    (click)="toggleFacet('colors', color)"
+                  >
+                    <span
+                      class="h-3.5 w-3.5 rounded-full border border-ink/10"
+                      [style.background]="swatchColor(color)"
+                    ></span>
+                    {{ color }}
+                  </button>
+                }
+              </div>
+            </fieldset>
+          }
+
+          @if (facetOptions.materials.length > 0) {
+            <fieldset class="border-t border-sand-deep/50 py-4">
+              <legend class="ox-label mb-2">Material</legend>
+              <div class="flex flex-col gap-2">
+                @for (material of facetOptions.materials; track material) {
+                  <label class="flex items-center gap-2 text-sm text-ink-soft">
+                    <input
+                      type="checkbox"
+                      class="ox-checkbox"
+                      [checked]="isSelected('materials', material)"
+                      (change)="toggleFacet('materials', material)"
+                    />
+                    {{ material }}
+                  </label>
+                }
+              </div>
+            </fieldset>
+          }
+
+          @if (facetOptions.occasions.length > 0) {
+            <fieldset class="border-t border-sand-deep/50 py-4">
+              <legend class="ox-label mb-2">Occasion</legend>
+              <div class="flex flex-col gap-2">
+                @for (occasion of facetOptions.occasions; track occasion) {
+                  <label class="flex items-center gap-2 text-sm text-ink-soft">
+                    <input
+                      type="checkbox"
+                      class="ox-checkbox"
+                      [checked]="isSelected('occasions', occasion)"
+                      (change)="toggleFacet('occasions', occasion)"
+                    />
+                    {{ occasion }}
+                  </label>
+                }
+              </div>
+            </fieldset>
+          }
+        }
+
+        <fieldset class="border-t border-sand-deep/50 py-4">
+          <legend class="ox-label mb-2">Availability</legend>
+          <label class="flex items-center gap-2 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              class="ox-checkbox"
+              [checked]="filters().inStock"
+              (change)="toggleInStock()"
+            />
+            In stock only
+          </label>
+          <label class="mt-2 flex items-center gap-2 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              class="ox-checkbox"
+              [checked]="filters().onSale"
+              (change)="toggleOnSale()"
+            />
+            On sale
+          </label>
+        </fieldset>
+      </aside>
+
+      <section>
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              class="ox-btn ox-btn--outline ox-btn--sm lg:hidden"
+              (click)="filtersOpen.set(true)"
+            >
+              <app-icon name="filter" [size]="15" />
+              Filters
+              @if (activeFilterCount() > 0) {
+                <span class="ox-badge ox-badge--progress">{{ activeFilterCount() }}</span>
+              }
+            </button>
+            <p class="text-sm text-ink-soft">
+              @if (loading()) {
+                Loading…
+              } @else {
+                <strong class="text-ink">{{ meta().total ?? items().length }}</strong>
+                piece{{ (meta().total ?? items().length) === 1 ? '' : 's' }}
+              }
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-ink-muted" for="shop-sort">Sort</label>
+            <select
+              id="shop-sort"
+              class="ox-select w-auto"
+              (change)="onSort($event)"
+            >
+              @for (option of sortOptions; track option.value) {
+                <option [value]="option.value" [selected]="option.value === filters().sort">
+                  {{ option.label }}
+                </option>
+              }
+            </select>
+          </div>
+        </div>
+
+        @if (loading()) {
+          <app-skeleton-grid [count]="9" [columns]="3" />
+        } @else if (items().length === 0) {
+          <app-empty-state
+            title="No pieces match these filters"
+            message="Try widening your price range or clearing a few filters to see more of the collection."
+            icon="search"
+            actionLabel="Clear all filters"
+            actionLink="/shop"
+          />
+        } @else {
+          <div class="ox-stagger grid grid-cols-2 gap-5 lg:grid-cols-3">
+            @for (product of items(); track product.id) {
+              <app-product-card [product]="product" />
+            }
+          </div>
+
+          <div class="mt-8">
+            <app-pagination
+              [page]="filters().page"
+              [totalPages]="totalPages()"
+              [total]="meta().total ?? 0"
+              (pageChange)="goToPage($event)"
+            />
+          </div>
+        }
+      </section>
+    </div>
+
+    @defer (on viewport) {
+      @if (suggestions().length > 0) {
+        <section class="ox-reveal mt-14 border-t border-sand-deep/50 pt-10">
+          <header class="mb-6">
+            <p class="ox-eyebrow">Keep browsing</p>
+            <h2 class="ox-display mt-1 text-2xl text-ink">You may also like</h2>
+          </header>
+          <div class="ox-stagger grid grid-cols-2 gap-5 lg:grid-cols-4">
+            @for (product of suggestions(); track product.id) {
+              <app-product-card [product]="product" />
+            }
+          </div>
+        </section>
+      }
+    } @placeholder {
+      <div class="mt-14 grid grid-cols-2 gap-5 lg:grid-cols-4">
+        @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+          <div class="ox-skeleton aspect-[4/5] rounded-2xl"></div>
+        }
+      </div>
+    } @loading (minimum 200ms) {
+      <div class="mt-14 grid place-items-center py-10">
+        <span class="ox-spinner"></span>
+      </div>
+    } @error {
+      <p class="mt-14 text-sm text-ink-soft">Suggestions are unavailable right now.</p>
+    }
+  </div>
+
+  <app-recently-viewed />
+</div>

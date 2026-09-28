@@ -1,0 +1,128 @@
+<section class="ox-container flex min-h-[70vh] items-center justify-center py-12">
+  <div class="w-full max-w-md">
+    <div class="ox-card ox-fade-up p-7 sm:p-9">
+      <p class="ox-eyebrow text-center">Welcome back</p>
+      <h1 class="ox-display mt-2 text-center text-3xl text-ink">Sign in</h1>
+      <p class="mt-2 text-center text-sm text-ink-soft">
+        Sign in to track orders, save favourites and check out faster.
+      </p>
+
+      <form class="mt-7 space-y-4" (ngSubmit)="submit()" novalidate>
+        @if (formError(); as message) {
+          <p class="ox-field-error" role="alert">{{ message }}</p>
+        }
+
+        <div>
+          <label class="ox-label" for="login-email">Email</label>
+          <input
+            id="login-email"
+            name="email"
+            type="email"
+            class="ox-input"
+            autocomplete="email"
+            placeholder="you@example.com"
+            required
+            [(ngModel)]="email"
+            [attr.aria-invalid]="fieldErrors()['email'] ? 'true' : null"
+          />
+          @if (fieldErrors()['email']; as message) {
+            <p class="ox-field-error">{{ message }}</p>
+          }
+        </div>
+
+        <div>
+          <label class="ox-label" for="login-password">Password</label>
+          <div class="relative">
+            <input
+              id="login-password"
+              name="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              class="ox-input pr-16"
+              autocomplete="current-password"
+              placeholder="Your password"
+              required
+              [(ngModel)]="password"
+              [attr.aria-invalid]="fieldErrors()['password'] ? 'true' : null"
+            />
+            <button
+              type="button"
+              class="ox-btn ox-btn--ghost ox-btn--sm absolute inset-y-0 right-1 my-auto"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+              (click)="togglePassword()"
+            >
+              {{ showPassword() ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          @if (fieldErrors()['password']; as message) {
+            <p class="ox-field-error">{{ message }}</p>
+          }
+        </div>
+
+        <div class="flex items-center justify-between gap-3">
+          <label class="flex items-center gap-2 text-sm text-ink-soft" for="login-remember">
+            <input
+              id="login-remember"
+              name="rememberMe"
+              type="checkbox"
+              class="ox-checkbox"
+              [(ngModel)]="rememberMe"
+            />
+            Remember me
+          </label>
+          <a class="text-sm font-semibold text-brass hover:underline" routerLink="/forgot-password">
+            Forgot password?
+          </a>
+        </div>
+
+        <button
+          type="submit"
+          class="ox-btn ox-btn--primary ox-btn--block ox-btn--lg"
+          [disabled]="submitting()"
+        >
+          @if (submitting()) {
+            <span class="ox-spinner"></span>
+            Signing in…
+          } @else {
+            Sign in
+            <app-icon name="arrow-right" [size]="16" />
+          }
+        </button>
+      </form>
+
+      <p class="mt-6 text-center text-sm text-ink-soft">
+        New here?
+        <a class="font-semibold text-brass hover:underline" routerLink="/register">Create an account</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+@defer (on viewport) {
+  <section class="ox-container pb-16 ox-reveal" aria-label="Why create an account">
+    <div class="ox-card grid gap-5 p-7 sm:grid-cols-3">
+      @for (perk of perks; track perk.title) {
+        <div class="flex items-start gap-3">
+          <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sand text-brass">
+            <app-icon [name]="perk.icon" [size]="17" />
+          </span>
+          <div>
+            <p class="text-sm font-semibold text-ink">{{ perk.title }}</p>
+            <p class="text-xs text-ink-muted">{{ perk.copy }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+} @placeholder {
+  <div class="ox-container pb-16">
+    <div class="ox-skeleton h-28 rounded-2xl"></div>
+  </div>
+} @loading (minimum 200ms) {
+  <div class="ox-container grid place-items-center pb-16">
+    <span class="ox-spinner"></span>
+  </div>
+} @error {
+  <div class="ox-container pb-16 text-sm text-ink-soft">
+    We could not load the account benefits right now.
+  </div>
+}

@@ -1,0 +1,242 @@
+<div class="flex flex-col">
+  <!-- Above the fold: rendered eagerly -->
+  <section class="relative overflow-hidden bg-ink text-ivory">
+    <!-- Crossfading image layers: the outgoing slide stays mounted while the next fades in. -->
+    @for (banner of banners(); track banner.id; let index = $index) {
+      <div
+        class="absolute inset-0 transition-opacity duration-[900ms] ease-out motion-reduce:transition-none"
+        [class.opacity-100]="index === activeIndex()"
+        [class.opacity-0]="index !== activeIndex()"
+        [attr.aria-hidden]="index !== activeIndex()"
+      >
+        <img
+          [src]="banner.image.url"
+          [alt]="banner.image.alt ?? banner.title"
+          [attr.fetchpriority]="index === 0 ? 'high' : 'auto'"
+          decoding="async"
+          class="h-full w-full object-cover opacity-70"
+          [class.ox-ken-burns]="index === activeIndex()"
+        />
+      </div>
+    }
+
+    <div class="absolute inset-0 bg-gradient-to-r from-ink/92 via-ink/60 to-ink/20"></div>
+
+    <!-- Fixed-height stage: the absolute layers above sit behind this. -->
+    <div class="relative flex h-[26rem] items-center sm:h-[32rem]">
+      <div class="ox-container w-full">
+        @for (banner of activeBanners(); track banner.id) {
+          <div class="ox-hero-copy max-w-2xl">
+            <p class="ox-eyebrow text-brass-soft">Oxidised jewellery</p>
+            <h1 class="ox-display mt-3 text-3xl leading-tight sm:text-5xl">{{ banner.title }}</h1>
+            @if (banner.subtitle) {
+              <p class="mt-3 max-w-xl text-sm text-ivory/85 sm:text-base">{{ banner.subtitle }}</p>
+            }
+            <div class="mt-7 flex flex-wrap gap-3">
+              <a class="ox-btn ox-btn--brass ox-btn--lg" [routerLink]="banner.ctaUrl ?? '/shop'">
+                {{ banner.ctaLabel ?? 'Shop now' }}
+                <app-icon name="arrow-right" [size]="16" />
+              </a>
+              <a
+                class="ox-btn ox-btn--outline ox-btn--lg border-ivory/40 text-ivory"
+                routerLink="/collections"
+              >
+                Browse collections
+              </a>
+            </div>
+          </div>
+        } @empty {
+          @if (!loaded()) {
+            <div class="ox-hero-copy max-w-2xl space-y-4">
+              <div class="ox-skeleton h-3 w-32"></div>
+              <div class="ox-skeleton h-12 w-3/4"></div>
+              <div class="ox-skeleton h-4 w-1/2"></div>
+              <div class="ox-skeleton h-11 w-44 rounded-full"></div>
+            </div>
+          } @else {
+            <div class="ox-hero-copy max-w-3xl">
+              <p class="ox-eyebrow text-brass-soft">Handcrafted in India</p>
+              <h1 class="ox-display mt-3 text-3xl leading-tight sm:text-5xl">
+                {{ settings()?.tagline ?? 'Oxidised silver, made to be worn every day.' }}
+              </h1>
+              <p class="mt-4 max-w-xl text-sm text-ivory/85 sm:text-base">
+                Hand-finished jhumkas, chokers and bridal sets in a deep, lasting patina.
+              </p>
+              <div class="mt-8 flex flex-wrap gap-3">
+                <a class="ox-btn ox-btn--brass ox-btn--lg" routerLink="/shop">
+                  Shop the range
+                  <app-icon name="arrow-right" [size]="16" />
+                </a>
+                <a
+                  class="ox-btn ox-btn--outline ox-btn--lg border-ivory/40 text-ivory"
+                  routerLink="/collections"
+                >
+                  Collections
+                </a>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    @if (banners().length > 1) {
+      <div class="absolute bottom-5 right-5 z-10 flex gap-2">
+        <button
+          type="button"
+          class="ox-btn ox-btn--outline ox-btn--sm border-ivory/40 text-ivory transition hover:border-brass-soft hover:text-brass-soft"
+          aria-label="Previous slide"
+          (click)="previous()"
+        >
+          <app-icon name="chevron-left" [size]="15" />
+        </button>
+        <button
+          type="button"
+          class="ox-btn ox-btn--outline ox-btn--sm border-ivory/40 text-ivory transition hover:border-brass-soft hover:text-brass-soft"
+          aria-label="Next slide"
+          (click)="next()"
+        >
+          <app-icon name="chevron-right" [size]="15" />
+        </button>
+      </div>
+
+      <div class="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+        @for (banner of banners(); track banner.id; let index = $index) {
+          <button
+            type="button"
+            class="h-1.5 rounded-full transition-all duration-300"
+            [class]="index === activeIndex() ? 'w-8 bg-brass-soft' : 'w-3 bg-ivory/40 hover:bg-ivory/70'"
+            [attr.aria-label]="'Show slide ' + (index + 1)"
+            (click)="setSlide(index)"
+          ></button>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- Trust strip: static, still revealed on load -->
+  <section class="border-b border-sand-deep/60 bg-paper">
+    <div class="ox-container ox-stagger grid grid-cols-2 gap-4 py-7 lg:grid-cols-4">
+      @for (point of trustPoints; track point.title) {
+        <div class="flex items-start gap-3">
+          <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sand text-brass">
+            <app-icon [name]="point.icon" [size]="17" />
+          </span>
+          <div>
+            <p class="text-sm font-semibold text-ink">{{ point.title }}</p>
+            <p class="text-xs text-ink-muted">{{ point.copy }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  @defer (on viewport) {
+    <app-featured-products-section eyebrow="Handpicked" title="Most loved this season" [limit]="8" />
+  } @placeholder (minimum 300ms) {
+    <div class="ox-container py-14">
+      <div class="ox-skeleton mb-8 h-8 w-64"></div>
+      <div class="grid grid-cols-2 gap-5 lg:grid-cols-4">
+        @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+          <div class="ox-card overflow-hidden">
+            <div class="ox-skeleton aspect-[4/5] w-full rounded-none"></div>
+          </div>
+        }
+      </div>
+    </div>
+  } @loading (minimum 200ms) {
+    <div class="ox-container py-14">
+      <div class="grid place-items-center py-10">
+        <span class="ox-spinner"></span>
+      </div>
+    </div>
+  } @error {
+    <div class="ox-container py-14 text-sm text-ink-soft">
+      We could not load the featured pieces. Please refresh the page.
+    </div>
+  }
+
+  @defer (on viewport) {
+    <app-category-strip-section />
+  } @placeholder {
+    <div class="ox-container py-10">
+      <div class="grid grid-cols-3 gap-4 sm:grid-cols-6">
+        @for (placeholder of [1, 2, 3, 4, 5, 6]; track placeholder) {
+          <div class="ox-skeleton h-28 rounded-2xl"></div>
+        }
+      </div>
+    </div>
+  }
+
+  @defer (on viewport) {
+    <app-collections-section />
+  } @placeholder {
+    <div class="ox-container py-14">
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+          <div class="ox-skeleton h-56 rounded-2xl"></div>
+        }
+      </div>
+    </div>
+  }
+
+  @defer (on viewport) {
+    <section class="ox-reveal relative overflow-hidden bg-ink py-16 text-ivory">
+      <div class="ox-container grid items-center gap-8 lg:grid-cols-2">
+        <div>
+          <p class="ox-eyebrow text-brass-soft">How it is made</p>
+          <h2 class="ox-display mt-2 text-2xl sm:text-3xl">
+            Shaped, soldered and oxidised by hand
+          </h2>
+          <p class="mt-4 text-sm leading-relaxed text-ivory/80">
+            Each piece is formed by artisan clusters in Rajasthan and Odisha, then oxidised in small
+            batches so the patina settles unevenly — which is exactly what makes it beautiful.
+          </p>
+          <ul class="ox-stagger mt-6 space-y-3 text-sm text-ivory/85">
+            <li class="flex items-center gap-2">
+              <app-icon name="check" [size]="16" /> Nickel-free alloy, safe for sensitive skin
+            </li>
+            <li class="flex items-center gap-2">
+              <app-icon name="check" [size]="16" /> Anti-tarnish pouch with every order
+            </li>
+            <li class="flex items-center gap-2">
+              <app-icon name="check" [size]="16" /> Fair pay for every artisan partner
+            </li>
+          </ul>
+        </div>
+        <div class="rounded-2xl border border-ivory/15 bg-ivory/5 p-6">
+          <h3 class="ox-display text-lg">Care in three steps</h3>
+          <ol class="mt-4 space-y-4 text-sm text-ivory/80">
+            <li><strong class="text-ivory">1.</strong> Keep away from water, perfume and hair spray.</li>
+            <li><strong class="text-ivory">2.</strong> Wipe with the soft pouch after every wear.</li>
+            <li><strong class="text-ivory">3.</strong> Never use silver polish — it strips the oxidised finish.</li>
+          </ol>
+          <a
+            routerLink="/pages/jewellery-care"
+            class="ox-btn ox-btn--outline ox-btn--sm mt-5 border-ivory/40 text-ivory"
+          >
+            Read the care guide
+          </a>
+        </div>
+      </div>
+    </section>
+  } @placeholder {
+    <div class="ox-container py-16">
+      <div class="ox-skeleton h-48 rounded-2xl"></div>
+    </div>
+  }
+
+  @defer (on viewport) {
+    <app-new-arrivals-section />
+  } @placeholder {
+    <div class="ox-container py-14">
+      <div class="grid grid-cols-2 gap-5 lg:grid-cols-4">
+        @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+          <div class="ox-skeleton aspect-[4/5] rounded-2xl"></div>
+        }
+      </div>
+    </div>
+  }
+
+  <app-recently-viewed />
+</div>

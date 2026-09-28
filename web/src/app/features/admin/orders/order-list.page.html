@@ -1,0 +1,250 @@
+<div class="ox-page">
+  <div class="ox-page-header">
+    <div>
+      <h1 class="ox-page-title">Orders</h1>
+      <p class="mt-1 text-sm text-ink-soft">
+        Track fulfilment, payments and export orders for reconciliation.
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" class="ox-btn ox-btn--outline" (click)="reload()" [disabled]="loading()">
+        <app-icon name="refresh" [size]="15" />
+        Refresh
+      </button>
+      <a class="ox-btn ox-btn--primary" [href]="exportUrl()" target="_blank" rel="noopener" download>
+        <app-icon name="page" [size]="15" />
+        Export CSV
+      </a>
+    </div>
+  </div>
+
+  <section class="grid gap-3 sm:grid-cols-3">
+    @if (stats(); as snapshot) {
+      @for (card of [
+        { label: 'Today', data: snapshot.today },
+        { label: 'This week', data: snapshot.week },
+        { label: 'This month', data: snapshot.month }
+      ]; track card.label) {
+        <div class="ox-card p-4">
+          <p class="ox-eyebrow">{{ card.label }}</p>
+          <p class="ox-display mt-2 text-2xl text-ink">{{ card.data.count }} orders</p>
+          <p class="mt-1 text-sm text-ink-soft">{{ formatCurrency(card.data.revenue) }}</p>
+        </div>
+      }
+    } @else if (statsLoading()) {
+      @for (placeholder of [1, 2, 3]; track placeholder) {
+        <div class="ox-card p-4">
+          <div class="ox-skeleton h-3 w-16"></div>
+          <div class="ox-skeleton mt-3 h-7 w-28"></div>
+          <div class="ox-skeleton mt-2 h-4 w-20"></div>
+        </div>
+      }
+    }
+  </section>
+
+  @if (stats(); as snapshot) {
+    @if (snapshot.byPaymentMethod.length > 0) {
+      <div class="ox-panel flex flex-wrap items-center gap-2 p-3">
+        <span class="text-xs font-semibold uppercase tracking-wide text-ink-muted">Payments</span>
+        @for (row of snapshot.byPaymentMethod; track row.method) {
+          <span class="ox-badge ox-badge--neutral">
+            {{ titleCase(row.method) }} · {{ row.count }}
+          </span>
+        }
+      </div>
+    }
+  }
+
+  <div class="ox-panel p-3">
+    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div class="xl:col-span-1">
+        <label class="ox-label" for="order-search">Search</label>
+        <div class="flex gap-2">
+          <input
+            id="order-search"
+            type="search"
+            class="ox-input"
+            placeholder="Order no, customer, phone"
+            [ngModel]="searchDraft()"
+            (ngModelChange)="searchDraft.set($event)"
+            (keyup.enter)="applySearch()"
+          />
+          <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" aria-label="Search orders" (click)="applySearch()">
+            <app-icon name="search" [size]="15" />
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="ox-label" for="order-status">Status</label>
+        <select
+          id="order-status"
+          class="ox-select"
+          [ngModel]="filters().status"
+          (ngModelChange)="updateFilter({ status: $event })"
+        >
+          <option value="all">All statuses</option>
+          @for (status of statuses; track status) {
+            <option [value]="status">{{ titleCase(status) }}</option>
+          }
+        </select>
+      </div>
+
+      <div>
+        <label class="ox-label" for="order-payment-status">Payment status</label>
+        <select
+          id="order-payment-status"
+          class="ox-select"
+          [ngModel]="filters().paymentStatus"
+          (ngModelChange)="updateFilter({ paymentStatus: $event })"
+        >
+          <option value="all">All payment statuses</option>
+          @for (status of paymentStatuses; track status) {
+            <option [value]="status">{{ titleCase(status) }}</option>
+          }
+        </select>
+      </div>
+
+      <div>
+        <label class="ox-label" for="order-payment-method">Payment method</label>
+        <select
+          id="order-payment-method"
+          class="ox-select"
+          [ngModel]="filters().paymentMethod"
+          (ngModelChange)="updateFilter({ paymentMethod: $event })"
+        >
+          <option value="all">All methods</option>
+          @for (method of paymentMethods; track method) {
+            <option [value]="method">{{ titleCase(method) }}</option>
+          }
+        </select>
+      </div>
+
+      <div>
+        <label class="ox-label" for="order-from">Placed from</label>
+        <input
+          id="order-from"
+          type="date"
+          class="ox-input"
+          [ngModel]="filters().from"
+          (ngModelChange)="updateFilter({ from: $event })"
+        />
+      </div>
+
+      <div>
+        <label class="ox-label" for="order-to">Placed to</label>
+        <input
+          id="order-to"
+          type="date"
+          class="ox-input"
+          [ngModel]="filters().to"
+          (ngModelChange)="updateFilter({ to: $event })"
+        />
+      </div>
+
+      <div class="flex items-end">
+        <button type="button" class="ox-btn ox-btn--ghost" [disabled]="!hasFilters()" (click)="clearFilters()">
+          <app-icon name="close" [size]="15" />
+          Clear filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="ox-card overflow-hidden">
+      <div class="space-y-2 p-4">
+        @for (placeholder of [1, 2, 3, 4, 5, 6]; track placeholder) {
+          <div class="ox-skeleton h-12 w-full"></div>
+        }
+      </div>
+    </div>
+  } @else if (failed()) {
+    <div class="ox-card flex flex-col items-center gap-3 px-6 py-12 text-center">
+      <span class="flex h-11 w-11 items-center justify-center rounded-full bg-rose/10 text-rose">
+        <app-icon name="alert" [size]="20" />
+      </span>
+      <p class="text-sm text-ink-soft">We could not load orders. Please try again.</p>
+      <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" (click)="reload()">Retry</button>
+    </div>
+  } @else if (orders().length === 0) {
+    <app-empty-state
+      icon="truck"
+      title="No orders found"
+      message="Adjust the filters above or wait for new orders to arrive."
+    />
+  } @else {
+    <div class="ox-card overflow-x-auto">
+      <table class="w-full min-w-[62rem] border-collapse text-sm">
+        <thead>
+          <tr class="bg-sand/60 text-xs uppercase tracking-wide text-ink-muted">
+            <th class="px-4 py-3 text-left font-semibold">Order</th>
+            <th class="px-4 py-3 text-left font-semibold">Customer</th>
+            <th class="px-4 py-3 text-center font-semibold">Items</th>
+            <th class="px-4 py-3 text-right font-semibold">Total</th>
+            <th class="px-4 py-3 text-left font-semibold">Payment</th>
+            <th class="px-4 py-3 text-left font-semibold">Status</th>
+            <th class="px-4 py-3 text-left font-semibold">Placed</th>
+            <th class="px-4 py-3 text-right font-semibold">Advance</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of orders(); track order.id) {
+            <tr class="border-t border-sand-deep/50 transition hover:bg-sand/30">
+              <td class="px-4 py-3">
+                <a class="font-semibold text-brass hover:underline" [routerLink]="['/admin/orders', order.orderNumber]">
+                  {{ order.orderNumber }}
+                </a>
+                @if (order.invoiceNumber) {
+                  <span class="block text-xs text-ink-muted">{{ order.invoiceNumber }}</span>
+                }
+              </td>
+              <td class="px-4 py-3">
+                <span class="block font-medium text-ink">{{ order.customerName }}</span>
+                <span class="block text-xs text-ink-muted">{{ order.customerPhone }}</span>
+              </td>
+              <td class="px-4 py-3 text-center text-ink-soft">{{ order.items.length }}</td>
+              <td class="px-4 py-3 text-right font-semibold text-ink">
+                {{ formatCurrency(order.pricing.total, order.pricing.currency) }}
+              </td>
+              <td class="px-4 py-3">
+                <span class="block text-xs uppercase tracking-wide text-ink-muted">
+                  {{ titleCase(order.payment.method) }}
+                </span>
+                <app-status-badge
+                  class="mt-1 inline-flex"
+                  [label]="titleCase(order.payment.status)"
+                  [tone]="paymentStatusTone(order.payment.status)"
+                />
+              </td>
+              <td class="px-4 py-3">
+                <app-status-badge [label]="titleCase(order.status)" [tone]="orderStatusTone(order.status)" />
+              </td>
+              <td class="px-4 py-3 text-xs text-ink-soft">{{ formatDateTime(order.placedAt) }}</td>
+              <td class="px-4 py-3 text-right">
+                @if (nextOrderStatuses(order.status).length > 0) {
+                  <select
+                    class="ox-select w-40"
+                    [ngModel]="''"
+                    [disabled]="advancingId() === order.id"
+                    (ngModelChange)="advance(order, $event)"
+                    [attr.aria-label]="'Advance order ' + order.orderNumber"
+                  >
+                    <option value="">Advance…</option>
+                    @for (status of nextOrderStatuses(order.status); track status) {
+                      <option [value]="status">{{ titleCase(status) }}</option>
+                    }
+                  </select>
+                } @else {
+                  <span class="text-xs text-ink-muted">No transitions</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <app-pagination [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="goToPage($event)" />
+  }
+</div>

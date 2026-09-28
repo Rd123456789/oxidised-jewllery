@@ -1,0 +1,169 @@
+<section class="ox-container flex min-h-[70vh] items-center justify-center py-12">
+  <div class="w-full max-w-lg">
+    <div class="ox-card ox-fade-up p-7 sm:p-9">
+      <p class="ox-eyebrow text-center">Join us</p>
+      <h1 class="ox-display mt-2 text-center text-3xl text-ink">Create your account</h1>
+      <p class="mt-2 text-center text-sm text-ink-soft">
+        One account for orders, addresses, returns and your wishlist.
+      </p>
+
+      <form class="mt-7 space-y-4" (ngSubmit)="submit()" novalidate>
+        @if (formError(); as message) {
+          <p class="ox-field-error" role="alert">{{ message }}</p>
+        }
+
+        <div>
+          <label class="ox-label" for="register-name">Full name</label>
+          <input
+            id="register-name"
+            name="name"
+            type="text"
+            class="ox-input"
+            autocomplete="name"
+            placeholder="Your name"
+            required
+            [ngModel]="form().name"
+            (ngModelChange)="update('name', $event)"
+            [attr.aria-invalid]="errorFor('name') ? 'true' : null"
+          />
+          @if (errorFor('name'); as message) {
+            <p class="ox-field-error">{{ message }}</p>
+          }
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="ox-label" for="register-email">Email</label>
+            <input
+              id="register-email"
+              name="email"
+              type="email"
+              class="ox-input"
+              autocomplete="email"
+              placeholder="you@example.com"
+              required
+              [ngModel]="form().email"
+              (ngModelChange)="update('email', $event)"
+              [attr.aria-invalid]="errorFor('email') ? 'true' : null"
+            />
+            @if (errorFor('email'); as message) {
+              <p class="ox-field-error">{{ message }}</p>
+            }
+          </div>
+
+          <div>
+            <label class="ox-label" for="register-phone">Phone (optional)</label>
+            <input
+              id="register-phone"
+              name="phone"
+              type="tel"
+              class="ox-input"
+              autocomplete="tel"
+              placeholder="825003***7"
+              [ngModel]="form().phone"
+              (ngModelChange)="update('phone', $event)"
+              [attr.aria-invalid]="errorFor('phone') ? 'true' : null"
+            />
+            @if (errorFor('phone'); as message) {
+              <p class="ox-field-error">{{ message }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="ox-label" for="register-password">Password</label>
+            <input
+              id="register-password"
+              name="password"
+              type="password"
+              class="ox-input"
+              autocomplete="new-password"
+              placeholder="At least 8 characters"
+              required
+              [ngModel]="form().password"
+              (ngModelChange)="update('password', $event)"
+              [attr.aria-invalid]="errorFor('password') ? 'true' : null"
+            />
+            @if (errorFor('password'); as message) {
+              <p class="ox-field-error">{{ message }}</p>
+            } @else {
+              <p class="ox-help">At least 8 characters with a letter and a number.</p>
+            }
+          </div>
+
+          <div>
+            <label class="ox-label" for="register-confirm">Confirm password</label>
+            <input
+              id="register-confirm"
+              name="confirmPassword"
+              type="password"
+              class="ox-input"
+              autocomplete="new-password"
+              placeholder="Repeat your password"
+              required
+              [ngModel]="form().confirmPassword"
+              (ngModelChange)="update('confirmPassword', $event)"
+              [attr.aria-invalid]="errorFor('confirmPassword') ? 'true' : null"
+            />
+            @if (errorFor('confirmPassword'); as message) {
+              <p class="ox-field-error">{{ message }}</p>
+            }
+          </div>
+        </div>
+
+        <div>
+          <label class="flex items-start gap-2 text-sm text-ink-soft" for="register-marketing">
+            <input
+              id="register-marketing"
+              name="marketingOptIn"
+              type="checkbox"
+              class="ox-checkbox mt-0.5"
+              [ngModel]="form().marketingOptIn"
+              (ngModelChange)="update('marketingOptIn', $event)"
+            />
+            Send me styling tips and early access to new collections.
+          </label>
+        </div>
+
+        <div>
+          <label class="flex items-start gap-2 text-sm text-ink-soft" for="register-terms">
+            <input
+              id="register-terms"
+              name="terms"
+              type="checkbox"
+              class="ox-checkbox mt-0.5"
+              required
+              [ngModel]="form().terms"
+              (ngModelChange)="update('terms', $event)"
+              [attr.aria-invalid]="errorFor('terms') ? 'true' : null"
+            />
+            I agree to the terms of service and privacy policy.
+          </label>
+          @if (errorFor('terms'); as message) {
+            <p class="ox-field-error">{{ message }}</p>
+          }
+        </div>
+
+        <button
+          type="submit"
+          class="ox-btn ox-btn--primary ox-btn--block ox-btn--lg"
+          [disabled]="submitting()"
+        >
+          @if (submitting()) {
+            <span class="ox-spinner"></span>
+            Creating account…
+          } @else {
+            Create account
+            <app-icon name="arrow-right" [size]="16" />
+          }
+        </button>
+      </form>
+
+      <p class="mt-6 text-center text-sm text-ink-soft">
+        Already have an account?
+        <a class="font-semibold text-brass hover:underline" routerLink="/login">Sign in</a>
+      </p>
+    </div>
+  </div>
+</section>

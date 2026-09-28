@@ -1,0 +1,163 @@
+<div class="space-y-6">
+  <section class="ox-card p-6">
+    <h2 class="ox-display text-xl text-ink">Personal details</h2>
+    <p class="mt-1 text-sm text-ink-soft">Keep your contact details up to date for order updates.</p>
+
+    <form class="mt-5 space-y-4" (ngSubmit)="saveProfile()" novalidate>
+      <div>
+        <label class="ox-label" for="profile-name">Full name</label>
+        <input
+          id="profile-name"
+          name="name"
+          type="text"
+          class="ox-input"
+          autocomplete="name"
+          [(ngModel)]="name"
+          [attr.aria-invalid]="profileErrors()['name'] ? 'true' : null"
+        />
+        @if (profileErrors()['name']; as message) {
+          <p class="ox-field-error">{{ message }}</p>
+        }
+      </div>
+
+      <div>
+        <label class="ox-label" for="profile-phone">Phone</label>
+        <input
+          id="profile-phone"
+          name="phone"
+          type="tel"
+          class="ox-input"
+          autocomplete="tel"
+          placeholder="825003***7"
+          [(ngModel)]="phone"
+          [attr.aria-invalid]="profileErrors()['phone'] ? 'true' : null"
+        />
+        @if (profileErrors()['phone']; as message) {
+          <p class="ox-field-error">{{ message }}</p>
+        }
+      </div>
+
+      <label class="flex items-start gap-2 text-sm text-ink-soft" for="profile-marketing">
+        <input
+          id="profile-marketing"
+          name="marketingOptIn"
+          type="checkbox"
+          class="ox-checkbox mt-0.5"
+          [(ngModel)]="marketingOptIn"
+        />
+        Email me styling tips and early access to new collections.
+      </label>
+
+      <button type="submit" class="ox-btn ox-btn--primary" [disabled]="savingProfile()">
+        @if (savingProfile()) {
+          <span class="ox-spinner"></span>
+          Saving…
+        } @else {
+          Save changes
+        }
+      </button>
+    </form>
+  </section>
+
+  <section class="ox-card p-6">
+    <h2 class="ox-display text-xl text-ink">Change password</h2>
+    <p class="mt-1 text-sm text-ink-soft">
+      Changing your password signs you out of every device, including this one.
+    </p>
+
+    <form class="mt-5 space-y-4" (ngSubmit)="changePassword()" novalidate>
+      <div>
+        <label class="ox-label" for="profile-current-password">Current password</label>
+        <input
+          id="profile-current-password"
+          name="currentPassword"
+          type="password"
+          class="ox-input"
+          autocomplete="current-password"
+          [(ngModel)]="currentPassword"
+          [attr.aria-invalid]="passwordErrors()['currentPassword'] ? 'true' : null"
+        />
+        @if (passwordErrors()['currentPassword']; as message) {
+          <p class="ox-field-error">{{ message }}</p>
+        }
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="ox-label" for="profile-new-password">New password</label>
+          <input
+            id="profile-new-password"
+            name="newPassword"
+            type="password"
+            class="ox-input"
+            autocomplete="new-password"
+            [(ngModel)]="newPassword"
+            [attr.aria-invalid]="passwordErrors()['newPassword'] ? 'true' : null"
+          />
+          @if (passwordErrors()['newPassword']; as message) {
+            <p class="ox-field-error">{{ message }}</p>
+          } @else {
+            <p class="ox-help">At least 8 characters with a letter and a number.</p>
+          }
+        </div>
+
+        <div>
+          <label class="ox-label" for="profile-confirm-password">Confirm new password</label>
+          <input
+            id="profile-confirm-password"
+            name="confirmPassword"
+            type="password"
+            class="ox-input"
+            autocomplete="new-password"
+            [(ngModel)]="confirmPassword"
+            [attr.aria-invalid]="passwordErrors()['confirmPassword'] ? 'true' : null"
+          />
+          @if (passwordErrors()['confirmPassword']; as message) {
+            <p class="ox-field-error">{{ message }}</p>
+          }
+        </div>
+      </div>
+
+      <button type="submit" class="ox-btn ox-btn--outline" [disabled]="changingPassword()">
+        @if (changingPassword()) {
+          <span class="ox-spinner"></span>
+          Updating…
+        } @else {
+          Update password
+        }
+      </button>
+    </form>
+  </section>
+
+  <section class="ox-card p-6">
+    <h2 class="ox-display text-xl text-ink">Account information</h2>
+
+    <dl class="mt-5 grid gap-4 sm:grid-cols-2">
+      <div>
+        <dt class="ox-label">Email</dt>
+        <dd class="text-sm text-ink">{{ user()?.email }}</dd>
+      </div>
+
+      <div>
+        <dt class="ox-label">Role</dt>
+        <dd class="text-sm text-ink">{{ role() }}</dd>
+      </div>
+
+      <div>
+        <dt class="ox-label">Email status</dt>
+        <dd class="mt-1">
+          @if (user()?.emailVerified) {
+            <app-status-badge label="Verified" tone="success" />
+          } @else {
+            <app-status-badge label="Not verified" tone="neutral" />
+          }
+        </dd>
+      </div>
+
+      <div>
+        <dt class="ox-label">Last login</dt>
+        <dd class="text-sm text-ink">{{ lastLogin() }}</dd>
+      </div>
+    </dl>
+  </section>
+</div>

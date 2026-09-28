@@ -1,0 +1,304 @@
+@if (loading()) {
+  <div class="space-y-5">
+    <div class="ox-card p-6">
+      <div class="ox-skeleton h-6 w-48"></div>
+      <div class="ox-skeleton mt-3 h-4 w-64"></div>
+    </div>
+    <div class="ox-card p-6">
+      <div class="ox-skeleton h-40 rounded-xl"></div>
+    </div>
+    <div class="ox-card p-6">
+      <div class="ox-skeleton h-28 rounded-xl"></div>
+    </div>
+  </div>
+} @else if (notFound()) {
+  <div class="ox-card p-10 text-center" role="alert">
+    <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose/10 text-rose">
+      <app-icon name="alert" [size]="22" />
+    </span>
+    <h1 class="ox-page-title mt-4">Order not found</h1>
+    <p class="mt-2 text-sm text-ink-soft">
+      We could not find this order in your account. It may belong to a different account.
+    </p>
+    <a class="ox-btn ox-btn--primary mt-6" routerLink="..">Back to orders</a>
+  </div>
+} @else {
+  @if (order(); as order) {
+    <div class="space-y-6">
+      <a class="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft hover:text-brass" routerLink="..">
+        <app-icon name="chevron-left" [size]="15" />
+        Back to orders
+      </a>
+
+      <header class="ox-card p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p class="ox-eyebrow">Order</p>
+            <h1 class="ox-page-title mt-1">{{ order.orderNumber }}</h1>
+            <p class="mt-1 text-sm text-ink-soft">Placed {{ formatDateTime(order.placedAt) }}</p>
+            @if (order.invoiceNumber) {
+              <p class="text-sm text-ink-soft">Invoice {{ order.invoiceNumber }}</p>
+            }
+          </div>
+          <app-status-badge [label]="titleCase(order.status)" [tone]="orderTone(order.status)" />
+        </div>
+      </header>
+
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div class="space-y-6">
+          <section class="ox-card p-6">
+            <h2 class="ox-display text-xl text-ink">Order status</h2>
+            <ol class="relative mt-5 space-y-5 border-l border-sand-deep pl-6">
+              @for (step of timeline(); track step.status) {
+                <li class="relative">
+                  <span
+                    class="absolute -left-[1.9rem] top-1 h-3.5 w-3.5 rounded-full border-2"
+                    [class.border-brass]="step.completed"
+                    [class.bg-brass]="step.completed"
+                    [class.border-sand-deep]="!step.completed"
+                    [class.bg-sand]="!step.completed"
+                  ></span>
+                  <p
+                    class="text-sm font-semibold"
+                    [class.text-ink]="step.completed"
+                    [class.text-ink-muted]="!step.completed"
+                  >
+                    {{ step.label }}
+                  </p>
+                  @if (step.changedAt) {
+                    <p class="text-xs text-ink-muted">{{ formatDateTime(step.changedAt) }}</p>
+                  }
+                  @if (step.note) {
+                    <p class="mt-1 text-sm text-ink-soft">{{ step.note }}</p>
+                  }
+                </li>
+              }
+            </ol>
+          </section>
+
+          <section class="ox-card p-6">
+            <h2 class="ox-display text-xl text-ink">Items</h2>
+
+            <div class="mt-4 divide-y divide-sand-deep/60">
+              @for (item of order.items; track item.sku) {
+                <div class="flex items-center gap-4 py-3">
+                  @if (item.image) {
+                    <img
+                      [src]="item.image"
+                      [alt]="item.name"
+                      class="h-16 w-14 shrink-0 rounded-xl object-cover"
+                      loading="lazy"
+                    />
+                  } @else {
+                    <span class="flex h-16 w-14 shrink-0 items-center justify-center rounded-xl bg-sand text-sand-deep">
+                      <app-icon name="sparkles" [size]="18" />
+                    </span>
+                  }
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold text-ink">{{ item.name }}</p>
+                    <p class="mt-0.5 text-xs text-ink-muted">
+                      SKU {{ item.sku }} · Qty {{ item.quantity }}
+                    </p>
+                  </div>
+                  <p class="text-sm font-semibold text-ink">
+                    {{ formatCurrency(item.lineTotal, order.pricing.currency) }}
+                  </p>
+                </div>
+              }
+            </div>
+
+            <dl class="mt-5 space-y-2 border-t border-sand-deep/60 pt-4 text-sm">
+              <div class="flex items-center justify-between">
+                <dt class="text-ink-soft">Subtotal</dt>
+                <dd class="text-ink">
+                  {{ formatCurrency(order.pricing.subtotal, order.pricing.currency) }}
+                </dd>
+              </div>
+              @if (order.pricing.discount > 0) {
+                <div class="flex items-center justify-between">
+                  <dt class="text-ink-soft">Discount</dt>
+                  <dd class="text-olive">
+                    −{{ formatCurrency(order.pricing.discount, order.pricing.currency) }}
+                  </dd>
+                </div>
+              }
+              <div class="flex items-center justify-between">
+                <dt class="text-ink-soft">Shipping</dt>
+                <dd class="text-ink">
+                  @if (order.pricing.freeShipping) {
+                    Free
+                  } @else {
+                    {{ formatCurrency(order.pricing.shippingFee, order.pricing.currency) }}
+                  }
+                </dd>
+              </div>
+              <div class="flex items-center justify-between">
+                <dt class="text-ink-soft">Tax</dt>
+                <dd class="text-ink">
+                  {{ formatCurrency(order.pricing.taxAmount, order.pricing.currency) }}
+                </dd>
+              </div>
+              <div class="flex items-center justify-between border-t border-sand-deep/60 pt-3 text-base font-semibold">
+                <dt class="text-ink">Total</dt>
+                <dd class="text-ink">
+                  {{ formatCurrency(order.pricing.total, order.pricing.currency) }}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          @if (order.customerNote) {
+            <section class="ox-card p-6">
+              <h2 class="ox-display text-xl text-ink">Your note</h2>
+              <p class="mt-2 text-sm text-ink-soft">{{ order.customerNote }}</p>
+            </section>
+          }
+        </div>
+
+        <aside class="space-y-6">
+          <section class="ox-card p-5">
+            <h2 class="ox-display text-lg text-ink">Delivery address</h2>
+            <address class="mt-3 text-sm not-italic text-ink-soft">
+              <p class="font-semibold text-ink">{{ order.shippingAddress.fullName }}</p>
+              <p>{{ order.shippingAddress.line1 }}</p>
+              @if (order.shippingAddress.line2) {
+                <p>{{ order.shippingAddress.line2 }}</p>
+              }
+              @if (order.shippingAddress.landmark) {
+                <p>{{ order.shippingAddress.landmark }}</p>
+              }
+              <p>
+                {{ order.shippingAddress.city }}, {{ order.shippingAddress.state }}
+                {{ order.shippingAddress.pincode }}
+              </p>
+              <p>{{ order.shippingAddress.country }}</p>
+              <p class="mt-2">{{ order.shippingAddress.phone }}</p>
+            </address>
+          </section>
+
+          <section class="ox-card p-5">
+            <h2 class="ox-display text-lg text-ink">Payment</h2>
+            <dl class="mt-3 space-y-2 text-sm">
+              <div class="flex items-center justify-between">
+                <dt class="text-ink-soft">Method</dt>
+                <dd class="text-ink">{{ titleCase(order.payment.method) }}</dd>
+              </div>
+              <div class="flex items-center justify-between">
+                <dt class="text-ink-soft">Status</dt>
+                <dd>
+                  <app-status-badge
+                    [label]="titleCase(order.payment.status)"
+                    [tone]="paymentTone(order.payment.status)"
+                  />
+                </dd>
+              </div>
+              @if (order.payment.paidAt) {
+                <div class="flex items-center justify-between">
+                  <dt class="text-ink-soft">Paid on</dt>
+                  <dd class="text-ink">{{ formatDateTime(order.payment.paidAt) }}</dd>
+                </div>
+              }
+              <div class="flex items-center justify-between">
+                <dt class="text-ink-soft">Amount</dt>
+                <dd class="text-ink">
+                  {{ formatCurrency(order.payment.amount, order.pricing.currency) }}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          @if (order.tracking.carrier || order.tracking.trackingNumber) {
+            <section class="ox-card p-5">
+              <h2 class="ox-display text-lg text-ink">Tracking</h2>
+              <dl class="mt-3 space-y-2 text-sm">
+                @if (order.tracking.carrier) {
+                  <div class="flex items-center justify-between gap-3">
+                    <dt class="text-ink-soft">Carrier</dt>
+                    <dd class="text-right text-ink">{{ order.tracking.carrier }}</dd>
+                  </div>
+                }
+                @if (order.tracking.trackingNumber) {
+                  <div class="flex items-center justify-between gap-3">
+                    <dt class="text-ink-soft">Number</dt>
+                    <dd class="text-right text-ink">{{ order.tracking.trackingNumber }}</dd>
+                  </div>
+                }
+                @if (order.tracking.shippedAt) {
+                  <div class="flex items-center justify-between gap-3">
+                    <dt class="text-ink-soft">Shipped</dt>
+                    <dd class="text-right text-ink">{{ formatDateTime(order.tracking.shippedAt) }}</dd>
+                  </div>
+                }
+                @if (order.tracking.deliveredAt) {
+                  <div class="flex items-center justify-between gap-3">
+                    <dt class="text-ink-soft">Delivered</dt>
+                    <dd class="text-right text-ink">{{ formatDateTime(order.tracking.deliveredAt) }}</dd>
+                  </div>
+                }
+              </dl>
+
+              @if (trackingLink(); as link) {
+                <a
+                  class="ox-btn ox-btn--outline ox-btn--sm mt-3"
+                  [href]="link"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  Track shipment
+                  <app-icon name="arrow-right" [size]="14" />
+                </a>
+              }
+            </section>
+          }
+
+          <section class="ox-card p-5">
+            <h2 class="ox-display text-lg text-ink">Actions</h2>
+
+            <div class="mt-3 space-y-2">
+              @if (canCancel()) {
+                @if (confirmingCancel()) {
+                  <p class="text-sm text-ink-soft">Cancel this order?</p>
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      class="ox-btn ox-btn--ghost ox-btn--sm flex-1"
+                      (click)="dismissCancel()"
+                    >
+                      Keep
+                    </button>
+                    <button
+                      type="button"
+                      class="ox-btn ox-btn--danger ox-btn--sm flex-1"
+                      [disabled]="cancelling()"
+                      (click)="confirmCancel()"
+                    >
+                      @if (cancelling()) {
+                        <span class="ox-spinner"></span>
+                      }
+                      Confirm
+                    </button>
+                  </div>
+                } @else {
+                  <button
+                    type="button"
+                    class="ox-btn ox-btn--outline ox-btn--block text-rose"
+                    (click)="requestCancel()"
+                  >
+                    Cancel order
+                  </button>
+                }
+              }
+
+              @if (mailtoHref(); as href) {
+                <a class="ox-btn ox-btn--ghost ox-btn--block" [href]="href">
+                  <app-icon name="info" [size]="15" />
+                  Need help? Email us
+                </a>
+              }
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+  }
+}

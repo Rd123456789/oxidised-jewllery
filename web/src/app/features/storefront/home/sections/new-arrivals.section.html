@@ -1,0 +1,33 @@
+<section class="ox-container py-14">
+  <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="ox-eyebrow">Just in</p>
+      <h2 class="ox-display mt-1 text-2xl text-ink sm:text-3xl">New arrivals</h2>
+    </div>
+    <a routerLink="/shop" [queryParams]="{ newArrival: true }" class="ox-btn ox-btn--outline ox-btn--sm">
+      Shop new in
+      <app-icon name="arrow-right" [size]="14" />
+    </a>
+  </header>
+
+  @if (loading()) {
+    <div class="grid grid-cols-2 gap-5 lg:grid-cols-4">
+      @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+        <div class="ox-card overflow-hidden">
+          <div class="ox-skeleton aspect-[4/5] w-full rounded-none"></div>
+          <div class="space-y-2 p-4">
+            <div class="ox-skeleton h-3 w-2/3"></div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (products().length > 0) {
+    <div class="ox-stagger grid grid-cols-2 gap-5 lg:grid-cols-4">
+      @for (product of products(); track product.id) {
+        <app-product-card [product]="product" />
+      }
+    </div>
+  } @else {
+    <p class="text-sm text-ink-soft">No new arrivals right now — check back soon.</p>
+  }
+</section>

@@ -1,0 +1,310 @@
+<div class="ox-page">
+  <div class="ox-page-header">
+    <div>
+      <h1 class="ox-page-title">Customers</h1>
+      <p class="mt-1 text-sm text-ink-soft">
+        Search accounts, review lifetime value and manage roles.
+      </p>
+    </div>
+    <button type="button" class="ox-btn ox-btn--outline" (click)="reload()" [disabled]="loading()">
+      <app-icon name="refresh" [size]="15" />
+      Refresh
+    </button>
+  </div>
+
+  <div class="ox-panel p-3">
+    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div>
+        <label class="ox-label" for="customer-search">Search</label>
+        <div class="flex gap-2">
+          <input
+            id="customer-search"
+            type="search"
+            class="ox-input"
+            placeholder="Name, email or phone"
+            [ngModel]="searchDraft()"
+            (ngModelChange)="searchDraft.set($event)"
+            (keyup.enter)="applySearch()"
+          />
+          <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" aria-label="Search customers" (click)="applySearch()">
+            <app-icon name="search" [size]="15" />
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="ox-label" for="customer-role">Role</label>
+        <select
+          id="customer-role"
+          class="ox-select"
+          [ngModel]="filters().role"
+          (ngModelChange)="updateFilter({ role: $event })"
+        >
+          <option value="all">All roles</option>
+          @for (role of roles; track role) {
+            <option [value]="role">{{ titleCase(role) }}</option>
+          }
+        </select>
+      </div>
+
+      <div>
+        <label class="ox-label" for="customer-active">Account</label>
+        <select
+          id="customer-active"
+          class="ox-select"
+          [ngModel]="filters().active"
+          (ngModelChange)="updateFilter({ active: $event })"
+        >
+          <option value="all">All accounts</option>
+          <option value="active">Active only</option>
+          <option value="inactive">Inactive only</option>
+        </select>
+      </div>
+
+      <div class="flex items-end">
+        <button type="button" class="ox-btn ox-btn--ghost" [disabled]="!hasFilters()" (click)="clearFilters()">
+          <app-icon name="close" [size]="15" />
+          Clear filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="ox-card p-4">
+      <div class="space-y-2">
+        @for (placeholder of [1, 2, 3, 4, 5, 6]; track placeholder) {
+          <div class="ox-skeleton h-12 w-full"></div>
+        }
+      </div>
+    </div>
+  } @else if (failed()) {
+    <div class="ox-card flex flex-col items-center gap-3 px-6 py-12 text-center">
+      <span class="flex h-11 w-11 items-center justify-center rounded-full bg-rose/10 text-rose">
+        <app-icon name="alert" [size]="20" />
+      </span>
+      <p class="text-sm text-ink-soft">We could not load customers. Please try again.</p>
+      <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" (click)="reload()">Retry</button>
+    </div>
+  } @else if (customers().length === 0) {
+    <app-empty-state
+      icon="users"
+      title="No customers found"
+      message="Try a different search or clear the filters."
+    />
+  } @else {
+    <div class="ox-card overflow-x-auto">
+      <table class="w-full min-w-[64rem] border-collapse text-sm">
+        <thead>
+          <tr class="bg-sand/60 text-xs uppercase tracking-wide text-ink-muted">
+            <th class="px-4 py-3 text-left font-semibold">Customer</th>
+            <th class="px-4 py-3 text-left font-semibold">Phone</th>
+            <th class="px-4 py-3 text-left font-semibold">Role</th>
+            <th class="px-4 py-3 text-center font-semibold">Orders</th>
+            <th class="px-4 py-3 text-right font-semibold">Lifetime value</th>
+            <th class="px-4 py-3 text-center font-semibold">Marketing</th>
+            <th class="px-4 py-3 text-left font-semibold">Joined</th>
+            <th class="px-4 py-3 text-left font-semibold">Last login</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (customer of customers(); track customer.id) {
+            <tr class="border-t border-sand-deep/50 transition hover:bg-sand/30">
+              <td class="px-4 py-3">
+                <span class="block font-medium text-ink">{{ customer.name }}</span>
+                <span class="block text-xs text-ink-muted">{{ customer.email }}</span>
+              </td>
+              <td class="px-4 py-3 text-ink-soft">{{ customer.phone ?? '—' }}</td>
+              <td class="px-4 py-3">
+                <app-status-badge
+                  [label]="titleCase(customer.role)"
+                  [tone]="customer.role === 'customer' ? 'neutral' : 'info'"
+                />
+              </td>
+              <td class="px-4 py-3 text-center text-ink-soft">{{ customer.orderCount }}</td>
+              <td class="px-4 py-3 text-right font-semibold text-ink">
+                {{ formatCurrency(customer.lifetimeValue) }}
+              </td>
+              <td class="px-4 py-3 text-center">
+                @if (customer.marketingOptIn) {
+                  <span class="ox-badge ox-badge--success">Opt-in</span>
+                } @else {
+                  <span class="ox-badge ox-badge--neutral">No</span>
+                }
+              </td>
+              <td class="px-4 py-3 text-xs text-ink-soft">{{ formatDate(customer.createdAt) }}</td>
+              <td class="px-4 py-3 text-xs text-ink-soft">{{ relativeTime(customer.lastLoginAt) }}</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    class="ox-btn ox-btn--outline ox-btn--sm"
+                    [attr.aria-expanded]="expandedId() === customer.id"
+                    [attr.aria-label]="'View details for ' + customer.name"
+                    (click)="toggleExpand(customer)"
+                  >
+                    <app-icon name="chevron-down" [size]="14" />
+                    Details
+                  </button>
+
+                  @if (confirmingId() === customer.id) {
+                    <button type="button" class="ox-btn ox-btn--danger ox-btn--sm" (click)="remove(customer)">Confirm</button>
+                    <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" (click)="confirmingId.set(null)">Cancel</button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="ox-btn ox-btn--ghost ox-btn--sm text-rose"
+                      [disabled]="!canDelete(customer)"
+                      [attr.aria-label]="'Delete ' + customer.name"
+                      [attr.title]="canDelete(customer) ? 'Delete customer' : 'Admin and staff accounts cannot be deleted'"
+                      (click)="confirmingId.set(customer.id)"
+                    >
+                      <app-icon name="trash" [size]="14" />
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+
+            @if (expandedId() === customer.id) {
+              <tr class="border-t border-sand-deep/50 bg-sand/20">
+                <td colspan="9" class="px-4 py-5">
+                  @if (detailLoading()) {
+                    <div class="space-y-2">
+                      @for (placeholder of [1, 2, 3]; track placeholder) {
+                        <div class="ox-skeleton h-10 w-full"></div>
+                      }
+                    </div>
+                  } @else {
+                    <div class="grid gap-5 lg:grid-cols-3">
+                      <div class="space-y-4">
+                        <h2 class="ox-eyebrow">Account</h2>
+                        <div>
+                          <label class="ox-label" for="edit-name">Name</label>
+                          <input
+                            id="edit-name"
+                            type="text"
+                            class="ox-input"
+                            [ngModel]="editForm().name"
+                            (ngModelChange)="patchEdit({ name: $event })"
+                          />
+                        </div>
+                        <div>
+                          <label class="ox-label" for="edit-phone">Phone</label>
+                          <input
+                            id="edit-phone"
+                            type="text"
+                            class="ox-input"
+                            [ngModel]="editForm().phone"
+                            (ngModelChange)="patchEdit({ phone: $event })"
+                          />
+                        </div>
+                        <div>
+                          <label class="ox-label" for="edit-role">Role</label>
+                          <select
+                            id="edit-role"
+                            class="ox-select"
+                            [ngModel]="editForm().role"
+                            (ngModelChange)="patchEdit({ role: $event })"
+                          >
+                            @for (role of roles; track role) {
+                              <option [value]="role">{{ titleCase(role) }}</option>
+                            }
+                          </select>
+                        </div>
+                        <div class="flex flex-wrap gap-4">
+                          <label class="flex items-center gap-2 text-sm text-ink-soft">
+                            <input
+                              type="checkbox"
+                              class="ox-checkbox"
+                              [ngModel]="editForm().isActive"
+                              (ngModelChange)="patchEdit({ isActive: $event })"
+                            />
+                            Active account
+                          </label>
+                          <label class="flex items-center gap-2 text-sm text-ink-soft">
+                            <input
+                              type="checkbox"
+                              class="ox-checkbox"
+                              [ngModel]="editForm().marketingOptIn"
+                              (ngModelChange)="patchEdit({ marketingOptIn: $event })"
+                            />
+                            Marketing opt-in
+                          </label>
+                        </div>
+                        <div class="flex gap-2">
+                          <button type="button" class="ox-btn ox-btn--primary ox-btn--sm" [disabled]="saving()" (click)="saveEdit(customer)">
+                            {{ saving() ? 'Saving…' : 'Save changes' }}
+                          </button>
+                          <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" (click)="collapse()">Close</button>
+                        </div>
+                      </div>
+
+                      <div class="space-y-4">
+                        <h2 class="ox-eyebrow">Addresses</h2>
+                        @if (detail(); as info) {
+                          <div class="flex flex-wrap gap-3 text-sm">
+                            <span class="ox-badge ox-badge--neutral">{{ info.stats.orderCount }} orders</span>
+                            <span class="ox-badge ox-badge--progress">
+                              {{ formatCurrency(info.stats.lifetimeValue) }} lifetime
+                            </span>
+                          </div>
+                        }
+                        @if (customerAddresses().length === 0) {
+                          <p class="text-sm text-ink-muted">No saved addresses.</p>
+                        } @else {
+                          @for (address of customerAddresses(); track $index) {
+                            <div class="ox-panel p-3 text-sm text-ink-soft">
+                              @if (address.label) {
+                                <span class="ox-badge ox-badge--neutral mb-1">{{ address.label }}</span>
+                              }
+                              <p class="font-medium text-ink">{{ address.fullName }}</p>
+                              <p>{{ address.phone }}</p>
+                              <p>{{ address.line1 }}</p>
+                              @if (address.line2) {
+                                <p>{{ address.line2 }}</p>
+                              }
+                              <p>{{ address.city }}, {{ address.state }} {{ address.pincode }}</p>
+                              <p>{{ address.country }}</p>
+                            </div>
+                          }
+                        }
+                      </div>
+
+                      <div class="space-y-4">
+                        <h2 class="ox-eyebrow">Recent orders</h2>
+                        @if (detail(); as info) {
+                          @if (info.orders.length === 0) {
+                            <p class="text-sm text-ink-muted">No orders placed yet.</p>
+                          } @else {
+                            <ul class="divide-y divide-sand-deep/50">
+                              @for (order of info.orders; track order.id) {
+                                <li class="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                                  <a class="font-medium text-brass hover:underline" [routerLink]="['/admin/orders', order.orderNumber]">
+                                    {{ order.orderNumber }}
+                                  </a>
+                                  <span class="text-xs text-ink-muted">{{ formatDate(order.placedAt) }}</span>
+                                  <span class="font-semibold text-ink">
+                                    {{ formatCurrency(order.pricing.total, order.pricing.currency) }}
+                                  </span>
+                                  <app-status-badge [label]="titleCase(order.status)" [tone]="orderStatusTone(order.status)" />
+                                </li>
+                              }
+                            </ul>
+                          }
+                        }
+                      </div>
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <app-pagination [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="goToPage($event)" />
+  }
+</div>

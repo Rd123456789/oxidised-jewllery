@@ -1,0 +1,335 @@
+<div class="ox-page">
+  <div class="ox-page-header">
+    <div>
+      <h1 class="ox-page-title">Coupons</h1>
+      <p class="mt-1 text-sm text-ink-soft">Create discount codes and control their validity.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" class="ox-btn ox-btn--outline" (click)="reload()" [disabled]="loading()">
+        <app-icon name="refresh" [size]="15" />
+        Refresh
+      </button>
+      <button type="button" class="ox-btn ox-btn--primary" (click)="openCreate()">
+        <app-icon name="plus" [size]="15" />
+        New coupon
+      </button>
+    </div>
+  </div>
+
+  @if (panelOpen()) {
+    <section class="ox-card p-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-display text-lg text-ink">
+          {{ editingId() ? 'Edit coupon' : 'Create coupon' }}
+        </h2>
+        <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" aria-label="Close form" (click)="closePanel()">
+          <app-icon name="close" [size]="16" />
+        </button>
+      </div>
+
+      <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div>
+          <label class="ox-label" for="coupon-code">Code</label>
+          <input
+            id="coupon-code"
+            type="text"
+            class="ox-input font-mono uppercase"
+            placeholder="WELCOME10"
+            [ngModel]="form().code"
+            (ngModelChange)="patch({ code: $event.toUpperCase() })"
+          />
+        </div>
+
+        <div class="xl:col-span-2">
+          <label class="ox-label" for="coupon-description">Description</label>
+          <input
+            id="coupon-description"
+            type="text"
+            class="ox-input"
+            placeholder="Shown to customers at checkout"
+            [ngModel]="form().description"
+            (ngModelChange)="patch({ description: $event })"
+          />
+        </div>
+
+        <div>
+          <label class="ox-label" for="coupon-type">Type</label>
+          <select
+            id="coupon-type"
+            class="ox-select"
+            [ngModel]="form().type"
+            (ngModelChange)="setType($event)"
+          >
+            @for (type of couponTypes; track type.value) {
+              <option [value]="type.value">{{ type.label }}</option>
+            }
+          </select>
+        </div>
+
+        @if (form().type !== 'free_shipping') {
+          <div>
+            <label class="ox-label" for="coupon-value">
+              {{ form().type === 'percentage' ? 'Percentage (%)' : 'Amount' }}
+            </label>
+            <input
+              id="coupon-value"
+              type="number"
+              min="0"
+              class="ox-input"
+              [ngModel]="form().value"
+              (ngModelChange)="patch({ value: $event })"
+            />
+          </div>
+        }
+
+        <div>
+          <label class="ox-label" for="coupon-min-order">Minimum order value</label>
+          <input
+            id="coupon-min-order"
+            type="number"
+            min="0"
+            class="ox-input"
+            [ngModel]="form().minOrderValue"
+            (ngModelChange)="patch({ minOrderValue: $event })"
+          />
+        </div>
+
+        @if (form().type === 'percentage') {
+          <div>
+            <label class="ox-label" for="coupon-max-discount">Maximum discount</label>
+            <input
+              id="coupon-max-discount"
+              type="number"
+              min="0"
+              class="ox-input"
+              placeholder="No cap"
+              [ngModel]="form().maxDiscount"
+              (ngModelChange)="patch({ maxDiscount: $event })"
+            />
+          </div>
+        }
+
+        <div>
+          <label class="ox-label" for="coupon-usage-limit">Total usage limit</label>
+          <input
+            id="coupon-usage-limit"
+            type="number"
+            min="0"
+            class="ox-input"
+            placeholder="Unlimited"
+            [ngModel]="form().usageLimit"
+            (ngModelChange)="patch({ usageLimit: $event })"
+          />
+        </div>
+
+        <div>
+          <label class="ox-label" for="coupon-per-user">Per-user limit</label>
+          <input
+            id="coupon-per-user"
+            type="number"
+            min="0"
+            class="ox-input"
+            [ngModel]="form().perUserLimit"
+            (ngModelChange)="patch({ perUserLimit: $event })"
+          />
+        </div>
+
+        <div>
+          <label class="ox-label" for="coupon-starts">Starts</label>
+          <input
+            id="coupon-starts"
+            type="date"
+            class="ox-input"
+            [ngModel]="form().startsAt"
+            (ngModelChange)="patch({ startsAt: $event })"
+          />
+        </div>
+
+        <div>
+          <label class="ox-label" for="coupon-expires">Expires</label>
+          <input
+            id="coupon-expires"
+            type="date"
+            class="ox-input"
+            [ngModel]="form().expiresAt"
+            (ngModelChange)="patch({ expiresAt: $event })"
+          />
+        </div>
+
+        <div class="flex items-end gap-5 pb-1">
+          <label class="flex items-center gap-2 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              class="ox-checkbox"
+              [ngModel]="form().firstOrderOnly"
+              (ngModelChange)="patch({ firstOrderOnly: $event })"
+            />
+            First order only
+          </label>
+          <label class="flex items-center gap-2 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              class="ox-checkbox"
+              [ngModel]="form().isActive"
+              (ngModelChange)="patch({ isActive: $event })"
+            />
+            Active
+          </label>
+        </div>
+      </div>
+
+      @if (valueError(); as error) {
+        <p class="ox-field-error">{{ error }}</p>
+      }
+
+      <div class="mt-4 flex gap-2">
+        <button type="button" class="ox-btn ox-btn--primary" [disabled]="saving() || !!valueError()" (click)="save()">
+          {{ saving() ? 'Saving…' : editingId() ? 'Save changes' : 'Create coupon' }}
+        </button>
+        <button type="button" class="ox-btn ox-btn--ghost" (click)="closePanel()">Cancel</button>
+      </div>
+    </section>
+  }
+
+  <div class="ox-panel flex flex-wrap items-center gap-2 p-3">
+    <span class="text-xs font-semibold uppercase tracking-wide text-ink-muted">Filter</span>
+    <button
+      type="button"
+      class="ox-chip"
+      [attr.aria-pressed]="activeFilter() === 'all'"
+      (click)="setActiveFilter('all')"
+    >
+      All
+    </button>
+    <button
+      type="button"
+      class="ox-chip"
+      [attr.aria-pressed]="activeFilter() === 'active'"
+      (click)="setActiveFilter('active')"
+    >
+      Active
+    </button>
+    <button
+      type="button"
+      class="ox-chip"
+      [attr.aria-pressed]="activeFilter() === 'inactive'"
+      (click)="setActiveFilter('inactive')"
+    >
+      Inactive
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="ox-card p-4">
+      <div class="space-y-2">
+        @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+          <div class="ox-skeleton h-12 w-full"></div>
+        }
+      </div>
+    </div>
+  } @else if (failed()) {
+    <div class="ox-card flex flex-col items-center gap-3 px-6 py-12 text-center">
+      <span class="flex h-11 w-11 items-center justify-center rounded-full bg-rose/10 text-rose">
+        <app-icon name="alert" [size]="20" />
+      </span>
+      <p class="text-sm text-ink-soft">We could not load coupons. Please try again.</p>
+      <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" (click)="reload()">Retry</button>
+    </div>
+  } @else if (coupons().length === 0) {
+    <app-empty-state
+      icon="tag"
+      title="No coupons yet"
+      message="Create your first discount code to boost conversions."
+    />
+  } @else {
+    <div class="ox-card overflow-x-auto">
+      <table class="w-full min-w-[64rem] border-collapse text-sm">
+        <thead>
+          <tr class="bg-sand/60 text-xs uppercase tracking-wide text-ink-muted">
+            <th class="px-4 py-3 text-left font-semibold">Code</th>
+            <th class="px-4 py-3 text-left font-semibold">Type</th>
+            <th class="px-4 py-3 text-left font-semibold">Value</th>
+            <th class="px-4 py-3 text-right font-semibold">Min order</th>
+            <th class="px-4 py-3 text-center font-semibold">Usage</th>
+            <th class="px-4 py-3 text-center font-semibold">Per user</th>
+            <th class="px-4 py-3 text-left font-semibold">Validity</th>
+            <th class="px-4 py-3 text-center font-semibold">Active</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (coupon of coupons(); track coupon.id) {
+            <tr class="border-t border-sand-deep/50 transition hover:bg-sand/30">
+              <td class="px-4 py-3">
+                <span class="font-mono font-semibold text-ink">{{ coupon.code }}</span>
+                @if (coupon.description) {
+                  <span class="block text-xs text-ink-muted">{{ coupon.description }}</span>
+                }
+              </td>
+              <td class="px-4 py-3">
+                <app-status-badge
+                  [label]="typeLabel(coupon.type)"
+                  [tone]="coupon.type === 'free_shipping' ? 'success' : coupon.type === 'percentage' ? 'info' : 'progress'"
+                />
+              </td>
+              <td class="px-4 py-3 font-semibold text-ink">{{ valueLabel(coupon) }}</td>
+              <td class="px-4 py-3 text-right text-ink-soft">
+                @if (coupon.minOrderValue > 0) {
+                  {{ formatCurrency(coupon.minOrderValue) }}
+                } @else {
+                  —
+                }
+              </td>
+              <td class="px-4 py-3 text-center text-ink-soft">
+                {{ coupon.usedCount }} / {{ coupon.usageLimit ?? '∞' }}
+              </td>
+              <td class="px-4 py-3 text-center text-ink-soft">
+                {{ coupon.perUserLimit > 0 ? coupon.perUserLimit : '∞' }}
+              </td>
+              <td class="px-4 py-3 text-xs">
+                <span [class]="isExpired(coupon) ? 'text-rose' : 'text-ink-soft'">
+                  {{ formatDate(coupon.startsAt) }} – {{ formatDate(coupon.expiresAt) }}
+                </span>
+                @if (isExpired(coupon)) {
+                  <span class="block font-semibold text-rose">Expired</span>
+                }
+              </td>
+              <td class="px-4 py-3 text-center">
+                <input
+                  type="checkbox"
+                  class="ox-checkbox"
+                  [ngModel]="coupon.isActive"
+                  [attr.aria-label]="'Toggle ' + coupon.code"
+                  (ngModelChange)="toggleActive(coupon)"
+                />
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-end gap-2">
+                  <button type="button" class="ox-btn ox-btn--outline ox-btn--sm" (click)="openEdit(coupon)">
+                    <app-icon name="edit" [size]="14" />
+                    Edit
+                  </button>
+                  @if (confirmingId() === coupon.id) {
+                    <button type="button" class="ox-btn ox-btn--danger ox-btn--sm" (click)="remove(coupon)">Confirm</button>
+                    <button type="button" class="ox-btn ox-btn--ghost ox-btn--sm" (click)="confirmingId.set(null)">Cancel</button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="ox-btn ox-btn--ghost ox-btn--sm text-rose"
+                      [attr.aria-label]="'Delete coupon ' + coupon.code"
+                      (click)="confirmingId.set(coupon.id)"
+                    >
+                      <app-icon name="trash" [size]="14" />
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <app-pagination [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="goToPage($event)" />
+  }
+</div>

@@ -36,6 +36,7 @@ export class CartPage {
 
   readonly maxQuantity = MAX_QUANTITY;
   readonly confirmingId = signal<string | null>(null);
+  readonly removingId = signal<string | null>(null);
   readonly couponInput = signal('');
   readonly applyingCoupon = signal(false);
 
@@ -85,13 +86,27 @@ export class CartPage {
   }
 
   cancelRemove(): void {
+    if (this.removingId()) {
+      return;
+    }
+
     this.confirmingId.set(null);
   }
 
   async remove(itemId: string): Promise<void> {
-    this.confirmingId.set(null);
-    await this.cart.remove(itemId);
-    this.cdr.markForCheck();
+    if (this.removingId()) {
+      return;
+    }
+
+    this.removingId.set(itemId);
+
+    try {
+      await this.cart.remove(itemId);
+    } finally {
+      this.removingId.set(null);
+      this.confirmingId.set(null);
+      this.cdr.markForCheck();
+    }
   }
 
   onCouponInput(event: Event): void {

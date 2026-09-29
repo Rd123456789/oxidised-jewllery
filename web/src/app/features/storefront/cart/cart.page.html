@@ -85,13 +85,18 @@
                     <button
                       type="button"
                       class="ox-btn ox-btn--danger ox-btn--sm"
+                      [disabled]="removingId() === item.id"
                       (click)="remove(item.id)"
                     >
+                      @if (removingId() === item.id) {
+                        <span class="ox-spinner"></span>
+                      }
                       Yes
                     </button>
                     <button
                       type="button"
                       class="ox-btn ox-btn--ghost ox-btn--sm"
+                      [disabled]="removingId() === item.id"
                       (click)="cancelRemove()"
                     >
                       No

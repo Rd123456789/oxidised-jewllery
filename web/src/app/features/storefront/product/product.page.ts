@@ -117,6 +117,12 @@ export class ProductPage {
     return product ? this.wishlist.has(product.id) : false;
   });
 
+  readonly wishlistButtonClass = computed(() =>
+    this.inWishlist()
+      ? 'ox-btn ox-btn--lg border-rose bg-rose text-ivory'
+      : 'ox-btn ox-btn--outline ox-btn--lg',
+  );
+
   readonly breadcrumbs = computed<BreadcrumbItem[]>(() => {
     const product = this.product();
 

@@ -15,12 +15,18 @@
                   {{ banner.subtitle }}
                 </p>
               }
-              <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-                <a class="ox-btn ox-btn--primary ox-btn--lg" [routerLink]="banner.ctaUrl ?? '/shop'">
+              <div class="mt-8 flex flex-nowrap items-center gap-x-3 sm:gap-x-6">
+                <a
+                  class="ox-btn ox-btn--primary ox-btn--lg shrink-0 whitespace-nowrap px-4 py-2.5 text-xs sm:px-[1.6rem] sm:py-[0.85rem] sm:text-[0.9375rem]"
+                  [routerLink]="banner.ctaUrl ?? '/shop'"
+                >
                   {{ banner.ctaLabel ?? 'Shop now' }}
                   <app-icon name="arrow-right" [size]="16" />
                 </a>
-                <a class="ox-link-arrow" routerLink="/collections">
+                <a
+                  class="ox-link-arrow shrink-0 whitespace-nowrap text-xs sm:text-sm"
+                  routerLink="/collections"
+                >
                   Browse collections
                   <app-icon name="arrow-right" [size]="14" />
                 </a>
@@ -43,12 +49,18 @@
                 <p class="mt-5 line-clamp-3 max-w-[34rem] text-base leading-relaxed text-ink-soft">
                   Hand-finished jhumkas, chokers and bridal sets in a deep, lasting patina.
                 </p>
-                <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-                  <a class="ox-btn ox-btn--primary ox-btn--lg" routerLink="/shop">
+                <div class="mt-8 flex flex-nowrap items-center gap-x-3 sm:gap-x-6">
+                  <a
+                    class="ox-btn ox-btn--primary ox-btn--lg shrink-0 whitespace-nowrap px-4 py-2.5 text-xs sm:px-[1.6rem] sm:py-[0.85rem] sm:text-[0.9375rem]"
+                    routerLink="/shop"
+                  >
                     Shop the range
                     <app-icon name="arrow-right" [size]="16" />
                   </a>
-                  <a class="ox-link-arrow" routerLink="/collections">
+                  <a
+                    class="ox-link-arrow shrink-0 whitespace-nowrap text-xs sm:text-sm"
+                    routerLink="/collections"
+                  >
                     Collections
                     <app-icon name="arrow-right" [size]="14" />
                   </a>

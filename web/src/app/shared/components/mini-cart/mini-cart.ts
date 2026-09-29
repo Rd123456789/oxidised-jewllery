@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   computed,
@@ -7,6 +8,7 @@ import {
   inject,
   input,
   output,
+  signal,
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -18,6 +20,7 @@ import { Icon } from '../icon/icon';
 import { QuantityStepper } from '../quantity-stepper/quantity-stepper';
 
 const MAX_QUANTITY = 10;
+const MIN_REMOVE_MS = 400;
 
 @Component({
   selector: 'app-mini-cart',
@@ -94,7 +97,11 @@ const MAX_QUANTITY = 10;
           } @else {
             <ul class="space-y-3">
               @for (item of cart.items(); track item.id) {
-                <li class="flex gap-3">
+                <li
+                  class="flex gap-3 transition-opacity"
+                  [class.opacity-60]="removingId() === item.id"
+                  [attr.aria-busy]="removingId() === item.id ? 'true' : null"
+                >
                   @if (item.image) {
                     <img
                       [src]="item.image"
@@ -129,10 +136,17 @@ const MAX_QUANTITY = 10;
                     </div>
                     <button
                       type="button"
-                      class="mt-0.5 inline-flex w-fit items-center gap-1 text-xs text-ink-muted hover:text-rose"
-                      (click)="cart.remove(item.id)"
+                      class="mt-0.5 inline-flex w-fit items-center gap-1 text-xs text-ink-muted transition hover:text-rose disabled:cursor-not-allowed disabled:opacity-60"
+                      [disabled]="removingId() === item.id"
+                      (click)="remove(item.id)"
                     >
-                      <app-icon name="trash" [size]="12" /> Remove
+                      @if (removingId() === item.id) {
+                        <span class="ox-spinner text-rose"></span>
+                        Removing…
+                      } @else {
+                        <app-icon name="trash" [size]="12" />
+                        Remove
+                      }
                     </button>
                   </div>
                 </li>
@@ -169,12 +183,15 @@ const MAX_QUANTITY = 10;
 export class MiniCart {
   readonly cart = inject(CartService);
   private readonly content = inject(ContentService);
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
 
   private previouslyFocused: HTMLElement | null = null;
 
   readonly open = input(false);
   readonly closed = output<void>();
+
+  readonly removingId = signal<string | null>(null);
 
   readonly MAX_QUANTITY = MAX_QUANTITY;
 
@@ -228,6 +245,28 @@ export class MiniCart {
 
   async changeQuantity(itemId: string, quantity: number): Promise<void> {
     await this.cart.updateQuantity(itemId, quantity);
+  }
+
+  async remove(itemId: string): Promise<void> {
+    if (this.removingId()) {
+      return;
+    }
+
+    this.removingId.set(itemId);
+    const startedAt = Date.now();
+
+    try {
+      await this.cart.remove(itemId);
+    } finally {
+      const elapsed = Date.now() - startedAt;
+
+      if (elapsed < MIN_REMOVE_MS) {
+        await new Promise((resolve) => setTimeout(resolve, MIN_REMOVE_MS - elapsed));
+      }
+
+      this.removingId.set(null);
+      this.cdr.markForCheck();
+    }
   }
 
   onKeydown(event: KeyboardEvent): void {

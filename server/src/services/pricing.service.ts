@@ -21,6 +21,7 @@ export interface PricingBreakdown {
   subtotal: number;
   discount: number;
   shippingFee: number;
+  codFee: number;
   taxAmount: number;
   total: number;
   currency: string;
@@ -65,21 +66,17 @@ export function computePricing({
     settings.freeShippingThreshold > 0 && taxableAmount >= settings.freeShippingThreshold;
   const freeShipping = freeShippingByCoupon || freeShippingByThreshold;
 
-  let shippingFee = freeShipping ? 0 : settings.shippingFlatRate;
-
-  if (paymentMethod === 'cod') {
-    shippingFee += settings.codFee ?? 0;
-  }
-
-  shippingFee = round2(shippingFee);
+  const shippingFee = round2(freeShipping ? 0 : settings.shippingFlatRate);
+  const codFee = paymentMethod === 'cod' ? round2(settings.codFee ?? 0) : 0;
 
   const taxAmount = round2((taxableAmount * settings.taxPercent) / 100);
-  const total = round2(taxableAmount + shippingFee + taxAmount);
+  const total = round2(taxableAmount + shippingFee + codFee + taxAmount);
 
   return {
     subtotal,
     discount,
     shippingFee,
+    codFee,
     taxAmount,
     total,
     currency: settings.currency,

@@ -101,13 +101,19 @@
               <div class="flex justify-between">
                 <dt class="text-ink-soft">Shipping</dt>
                 <dd class="text-ink">
-                  @if (order.pricing.freeShipping) {
+                  @if (order.pricing.freeShipping || order.pricing.shippingFee === 0) {
                     Free
                   } @else {
                     {{ formatCurrency(order.pricing.shippingFee, order.pricing.currency) }}
                   }
                 </dd>
               </div>
+              @if (order.pricing.codFee > 0) {
+                <div class="flex justify-between">
+                  <dt class="text-ink-soft">COD fee</dt>
+                  <dd class="text-ink">{{ formatCurrency(order.pricing.codFee, order.pricing.currency) }}</dd>
+                </div>
+              }
               <div class="flex justify-between">
                 <dt class="text-ink-soft">Tax</dt>
                 <dd class="text-ink">{{ formatCurrency(order.pricing.taxAmount, order.pricing.currency) }}</dd>

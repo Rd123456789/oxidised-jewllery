@@ -64,10 +64,12 @@ export interface OrderPricing {
   subtotal: number;
   discount: number;
   shippingFee: number;
+  codFee: number;
   taxAmount: number;
   total: number;
   currency: string;
   couponCode?: string;
+  freeShipping: boolean;
 }
 
 export interface PaymentDetails {
@@ -169,10 +171,12 @@ const orderSchema = new Schema<OrderDocument>(
       subtotal: { type: Number, required: true, min: 0 },
       discount: { type: Number, default: 0, min: 0 },
       shippingFee: { type: Number, default: 0, min: 0 },
+      codFee: { type: Number, default: 0, min: 0 },
       taxAmount: { type: Number, default: 0, min: 0 },
       total: { type: Number, required: true, min: 0 },
       currency: { type: String, default: 'INR', uppercase: true },
       couponCode: { type: String, trim: true, uppercase: true },
+      freeShipping: { type: Boolean, default: false },
     },
     payment: {
       method: { type: String, enum: ['cod', 'razorpay', 'upi', 'manual'], default: 'cod' },

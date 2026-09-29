@@ -152,7 +152,7 @@
               <div class="flex items-center justify-between">
                 <dt class="text-ink-soft">Shipping</dt>
                 <dd class="font-medium text-ink">
-                  {{ summary.shippingFee === 0 ? 'Free' : money(summary.shippingFee) }}
+                  {{ summary.freeShipping || summary.shippingFee === 0 ? 'Free' : money(summary.shippingFee) }}
                 </dd>
               </div>
 

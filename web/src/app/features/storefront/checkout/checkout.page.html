@@ -73,11 +73,12 @@
               }
             </div>
           } @else {
-            <p class="mt-4 flex items-center gap-2 text-sm text-ink-soft">
-              <app-icon name="check" [size]="16" />
-              Checking out as <strong class="font-semibold text-ink">{{ displayName() }}</strong>
+            <p class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-soft">
+              <app-icon name="check" [size]="16" class="shrink-0" />
+              <span>Checking out as</span>
+              <strong class="font-semibold text-ink">{{ displayName() }}</strong>
               @if (email()) {
-                <span class="text-ink-muted">({{ email() }})</span>
+                <span class="break-all text-ink-muted">({{ email() }})</span>
               }
             </p>
           }
@@ -424,9 +425,16 @@
               <div class="flex items-center justify-between">
                 <dt class="text-ink-soft">Shipping</dt>
                 <dd class="font-medium text-ink">
-                  {{ summary.pricing.shippingFee === 0 ? 'Free' : money(summary.pricing.shippingFee) }}
+                  {{ summary.pricing.freeShipping || summary.pricing.shippingFee === 0 ? 'Free' : money(summary.pricing.shippingFee) }}
                 </dd>
               </div>
+
+              @if (summary.pricing.codFee > 0) {
+                <div class="flex items-center justify-between">
+                  <dt class="text-ink-soft">COD fee</dt>
+                  <dd class="font-medium text-ink">{{ money(summary.pricing.codFee) }}</dd>
+                </div>
+              }
 
               <div class="flex items-center justify-between">
                 <dt class="text-ink-soft">{{ settings()?.taxLabel ?? 'Tax' }}</dt>

@@ -200,6 +200,7 @@ export interface PricingBreakdown {
   subtotal: number;
   discount: number;
   shippingFee: number;
+  codFee: number;
   taxAmount: number;
   total: number;
   currency: string;

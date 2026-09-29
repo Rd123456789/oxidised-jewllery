@@ -139,6 +139,101 @@
     }
   }
 
+  @media (min-width: 1024px) {
+    .ox-container {
+      padding-inline: 2.5rem;
+    }
+  }
+
+  /* One vertical rhythm for every storefront band, so sections and their
+     deferred placeholders always swap at the same height. */
+  .ox-section {
+    padding-block: 4rem;
+  }
+
+  .ox-section--tight {
+    padding-block: 3rem;
+  }
+
+  @media (min-width: 640px) {
+    .ox-section {
+      padding-block: 5rem;
+    }
+
+    .ox-section--tight {
+      padding-block: 3.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .ox-section {
+      padding-block: 6rem;
+    }
+
+    .ox-section--tight {
+      padding-block: 4rem;
+    }
+  }
+
+  .ox-h1,
+  .ox-h2,
+  .ox-h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  .ox-h1 {
+    font-size: clamp(2.25rem, 6vw, 3.75rem);
+  }
+
+  .ox-h2 {
+    font-size: clamp(1.5rem, 3.2vw, 2.25rem);
+  }
+
+  .ox-h3 {
+    font-size: clamp(1.125rem, 2vw, 1.375rem);
+    line-height: 1.2;
+  }
+
+  .ox-link-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+    transition: color 0.15s ease, gap 0.15s ease;
+  }
+
+  .ox-link-arrow:hover {
+    color: var(--color-brass);
+    gap: 0.6rem;
+  }
+
+  /* Horizontal rail used by the storefront product rows. Native CSS scroll-snap only,
+     so it degrades to a plain scrollable row with no JS and nothing to disable under
+     `prefers-reduced-motion`. Children must carry their own width. */
+  .ox-rail {
+    display: flex;
+    gap: 1.25rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 0.25rem;
+  }
+
+  .ox-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ox-rail > * {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+
   .ox-display {
     font-family: var(--font-display);
     font-weight: 600;
@@ -275,6 +370,18 @@
     font-size: 0.875rem;
     color: var(--color-ink);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  /* Native select arrows sit flush against the border and differ per browser, so
+     every dropdown draws the same chevron at the same offset instead. */
+  .ox-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236f6862' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 0.8rem;
+    padding-right: 2.1rem;
+    cursor: pointer;
   }
 
   .ox-input::placeholder,
@@ -453,10 +560,6 @@
 
   .ox-pop {
     animation: ox-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  }
-
-  .ox-ken-burns {
-    animation: ox-ken-burns 9s ease-out both;
   }
 
   .ox-stagger > * {
@@ -791,15 +894,6 @@
   }
 }
 
-@keyframes ox-ken-burns {
-  from {
-    transform: scale(1) translate3d(0, 0, 0);
-  }
-  to {
-    transform: scale(1.09) translate3d(1.4%, -1%, 0);
-  }
-}
-
 @keyframes ox-toast-in {
   from {
     opacity: 0;
@@ -861,7 +955,6 @@
   .ox-reveal,
   .ox-slide-down,
   .ox-pop,
-  .ox-ken-burns,
   .ox-toast,
   .ox-spinner,
   .ox-stagger > *,

@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal }
 import { RouterLink } from '@angular/router';
 import { CatalogService } from '../../../../core/services/catalog.service';
 import { Icon } from '../../../../shared/components/icon/icon';
+import { SectionHeader } from '../../../../shared/components/section-header/section-header';
 
 @Component({
   selector: 'app-category-strip-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon],
+  imports: [RouterLink, Icon, SectionHeader],
   host: { class: 'block ox-reveal' },
   templateUrl: './category-strip.section.html',
 })

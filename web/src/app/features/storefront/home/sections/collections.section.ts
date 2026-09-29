@@ -3,11 +3,12 @@ import { RouterLink } from '@angular/router';
 import type { Collection } from '../../../../core/api/api.models';
 import { CatalogService } from '../../../../core/services/catalog.service';
 import { Icon } from '../../../../shared/components/icon/icon';
+import { SectionHeader } from '../../../../shared/components/section-header/section-header';
 
 @Component({
   selector: 'app-collections-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon],
+  imports: [RouterLink, Icon, SectionHeader],
   host: { class: 'block ox-reveal' },
   templateUrl: './collections.section.html',
 })
@@ -25,7 +26,7 @@ export class CollectionsSection {
   private async load(): Promise<void> {
     try {
       const collections = await this.catalog.getCollections();
-      this.collections.set(collections.filter((collection) => collection.isFeatured).slice(0, 4));
+      this.collections.set(collections.filter((collection) => collection.isFeatured).slice(0, 3));
     } catch {
       this.collections.set([]);
     } finally {

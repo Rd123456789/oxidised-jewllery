@@ -218,8 +218,8 @@
       </aside>
 
       <section>
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
+        <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-center justify-between gap-3 lg:justify-start">
             <button
               type="button"
               class="ox-btn ox-btn--outline ox-btn--sm lg:hidden"
@@ -242,18 +242,20 @@
           </div>
 
           <div class="flex items-center gap-2">
-            <label class="text-xs text-ink-muted" for="shop-sort">Sort</label>
-            <select
-              id="shop-sort"
-              class="ox-select w-auto"
-              (change)="onSort($event)"
-            >
-              @for (option of sortOptions; track option.value) {
-                <option [value]="option.value" [selected]="option.value === filters().sort">
-                  {{ option.label }}
-                </option>
-              }
-            </select>
+            <label class="shrink-0 text-xs text-ink-muted" for="shop-sort">Sort</label>
+            <div class="min-w-0 flex-1 sm:flex-none">
+              <select
+                id="shop-sort"
+                class="ox-select sm:w-44"
+                (change)="onSort($event)"
+              >
+                @for (option of sortOptions; track option.value) {
+                  <option [value]="option.value" [selected]="option.value === filters().sort">
+                    {{ option.label }}
+                  </option>
+                }
+              </select>
+            </div>
           </div>
         </div>
 

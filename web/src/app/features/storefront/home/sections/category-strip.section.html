@@ -1,17 +1,16 @@
-<section class="border-y border-sand-deep/60 bg-paper/60 py-10">
+<section class="border-y border-sand-deep/60 bg-paper/60 ox-section--tight">
   <div class="ox-container">
-    <header class="mb-7 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <p class="ox-eyebrow">Browse</p>
-        <h2 class="ox-display mt-1 text-xl text-ink sm:text-2xl">Shop by category</h2>
-      </div>
-      <a routerLink="/shop" class="text-sm text-brass hover:underline">See everything</a>
-    </header>
+    <app-section-header
+      eyebrow="Browse"
+      title="Shop by category"
+      linkLabel="See everything"
+      linkRoute="/shop"
+    />
 
     @if (loading() && categories().length === 0) {
       <div class="grid grid-cols-3 gap-4 sm:grid-cols-6">
         @for (placeholder of skeletons; track placeholder) {
-          <div class="ox-skeleton h-28 rounded-2xl"></div>
+          <div class="ox-skeleton mx-auto h-20 w-20 rounded-full sm:h-24 sm:w-24"></div>
         }
       </div>
     } @else {
@@ -20,24 +19,24 @@
           <a
             [routerLink]="['/shop']"
             [queryParams]="{ category: category.slug }"
-            class="flex flex-col items-center gap-3 rounded-2xl border border-sand-deep/60 bg-paper p-3 text-center active:border-brass"
+            class="flex flex-col items-center gap-3 text-center active:opacity-80"
           >
             @if (category.image?.url; as image) {
               <img
                 [src]="image"
                 [alt]="category.name"
                 loading="lazy"
-                class="h-16 w-16 rounded-full object-cover"
+                class="h-20 w-20 rounded-full object-cover sm:h-24 sm:w-24"
               />
             } @else {
-              <span class="flex h-16 w-16 items-center justify-center rounded-full bg-sand text-brass">
+              <span class="flex h-20 w-20 items-center justify-center rounded-full bg-sand text-brass sm:h-24 sm:w-24">
                 <app-icon name="sparkles" [size]="20" />
               </span>
             }
-            <span class="text-xs font-semibold text-ink">
-              {{ category.name }}
-            </span>
-            <span class="text-[0.6875rem] text-ink-muted">{{ category.productCount }} pieces</span>
+            <div class="space-y-0.5">
+              <p class="text-xs font-semibold text-ink sm:text-sm">{{ category.name }}</p>
+              <p class="text-[0.6875rem] text-ink-muted">{{ category.productCount }} pieces</p>
+            </div>
           </a>
         }
       </div>

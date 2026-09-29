@@ -144,9 +144,9 @@ Verification checklist before finishing any change:
   properties the base class sets.
 - Animation vocabulary (all disabled under `prefers-reduced-motion`): `ox-reveal` for deferred
   content, `ox-stagger` for grids, `ox-hero-copy` for hero copy that replays per slide, `ox-slide-down`
-  for dropdowns, `ox-pop` for badge/appearance pops, `ox-ken-burns` for the hero image. Everything
-  lives in the `components` layer, so Tailwind utilities still win. Product cards deliberately have
-  **no hover-only affordances** (no lift, no image zoom, no hover colour): touch devices cannot
+  for dropdowns, `ox-pop` for badge/appearance pops. Everything lives in the `components` layer, so
+  Tailwind utilities still win. Product cards deliberately have **no hover-only affordances** (no
+  lift, no image zoom, no hover colour): touch devices cannot
   trigger them, so feedback uses `active:` states instead.
 - To audit styling: a class in a template that is absent from the compiled CSS silently does nothing.
   Comparing template class tokens against `dist/web/browser/*.css` catches typos, orphan modifiers and

@@ -4,14 +4,14 @@ import type { Product, ProductSummary } from '../../../../core/api/api.models';
 import { CartService } from '../../../../core/services/cart.service';
 import { CatalogService } from '../../../../core/services/catalog.service';
 import { ToastService } from '../../../../core/services/toast.service';
-import { Icon } from '../../../../shared/components/icon/icon';
 import { PriceTag } from '../../../../shared/components/price/price';
 import { ProductCard } from '../../../../shared/components/product-card/product-card';
+import { SectionHeader } from '../../../../shared/components/section-header/section-header';
 
 @Component({
   selector: 'app-featured-products-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, ProductCard],
+  imports: [RouterLink, ProductCard, SectionHeader],
   host: { class: 'block ox-reveal' },
   templateUrl: './featured-products.section.html',
 })

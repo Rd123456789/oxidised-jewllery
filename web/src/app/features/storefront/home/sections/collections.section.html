@@ -1,45 +1,45 @@
-<section class="bg-paper py-14">
+<section class="bg-paper ox-section">
   <div class="ox-container">
-    <header class="mb-8">
-      <p class="ox-eyebrow">Curated edits</p>
-      <h2 class="ox-display mt-1 text-2xl text-ink sm:text-3xl">Shop by collection</h2>
-      <p class="mt-2 max-w-2xl text-sm text-ink-soft">
-        Themed edits put together by our stylists — from everyday oxidised studs to full bridal sets.
-      </p>
-    </header>
+    <app-section-header
+      eyebrow="Curated edits"
+      title="Shop by collection"
+      description="Themed edits put together by our stylists — from everyday oxidised studs to full bridal sets."
+    />
 
     @if (loading()) {
-      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        @for (placeholder of [1, 2, 3, 4]; track placeholder) {
-          <div class="ox-skeleton h-56 rounded-2xl"></div>
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:auto-rows-[13rem]">
+        @for (placeholder of [1, 2, 3]; track placeholder) {
+          <div
+            class="ox-skeleton h-60 rounded-2xl sm:first:col-span-2 sm:first:h-72 lg:h-full lg:first:col-span-2 lg:first:row-span-2 lg:first:h-full"
+          ></div>
         }
       </div>
     } @else {
-      <div class="ox-stagger grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="ox-stagger grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:auto-rows-[13rem]">
         @for (collection of collections(); track collection.id) {
           <a
             [routerLink]="['/collections', collection.slug]"
-            class="group relative overflow-hidden rounded-2xl border border-sand-deep/60"
+            class="group relative block h-60 overflow-hidden rounded-2xl sm:first:col-span-2 sm:first:h-72 lg:h-full lg:first:col-span-2 lg:first:row-span-2 lg:first:h-full"
           >
             @if (collection.heroImage?.url ?? collection.thumbnail?.url; as image) {
               <img
                 [src]="image"
                 [alt]="collection.name"
                 loading="lazy"
-                class="h-56 w-full object-cover"
+                class="h-full w-full object-cover"
               />
             } @else {
-              <div class="h-56 w-full bg-sand"></div>
+              <div class="h-full w-full bg-sand"></div>
             }
 
             <div
-              class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-ink/85 via-ink/25 to-transparent p-4 text-ivory"
+              class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-ink/70 via-ink/10 to-transparent p-5 text-ivory"
             >
-              <span class="ox-badge ox-badge--tag self-start">
-                {{ collection.tagline ?? 'Collection' }}
-              </span>
-              <h3 class="ox-display mt-2 text-lg">{{ collection.name }}</h3>
-              <span class="mt-2 inline-flex items-center gap-1 text-xs font-semibold">
+              <h3 class="ox-display text-lg">{{ collection.name }}</h3>
+              @if (collection.tagline) {
+                <p class="mt-1 text-xs text-ivory/75">{{ collection.tagline }}</p>
+              }
+              <span class="mt-3 inline-flex items-center gap-1 text-xs font-semibold">
                 Explore
                 <app-icon name="arrow-right" [size]="13" />
               </span>

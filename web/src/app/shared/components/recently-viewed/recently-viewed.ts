@@ -16,10 +16,10 @@ import { Icon } from '../icon/icon';
   imports: [RouterLink, Icon],
   template: `
     @if (items().length > 0) {
-      <section class="ox-container py-14">
+      <section class="ox-container ox-section--tight">
         <header class="mb-6">
           <p class="ox-eyebrow">Pick up where you left off</p>
-          <h2 class="ox-display mt-1 text-2xl text-ink">Recently viewed</h2>
+          <h2 class="ox-h2 mt-2 text-ink">Recently viewed</h2>
         </header>
         <div class="ox-stagger flex gap-4 overflow-x-auto pb-2">
           @for (recent of items(); track recent.slug) {

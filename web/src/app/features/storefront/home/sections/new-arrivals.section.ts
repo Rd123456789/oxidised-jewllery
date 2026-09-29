@@ -1,14 +1,13 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import type { ProductSummary } from '../../../../core/api/api.models';
 import { CatalogService } from '../../../../core/services/catalog.service';
-import { Icon } from '../../../../shared/components/icon/icon';
 import { ProductCard } from '../../../../shared/components/product-card/product-card';
+import { SectionHeader } from '../../../../shared/components/section-header/section-header';
 
 @Component({
   selector: 'app-new-arrivals-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, ProductCard],
+  imports: [ProductCard, SectionHeader],
   host: { class: 'block ox-reveal' },
   templateUrl: './new-arrivals.section.html',
 })

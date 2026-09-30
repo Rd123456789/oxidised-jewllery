@@ -1,4 +1,4 @@
-<div class="flex flex-col">
+<div class="flex flex-col overflow-x-clip">
   <!-- Above the fold: rendered eagerly -->
   <section class="bg-ivory">
     <div class="ox-container ox-section--tight">
@@ -70,7 +70,7 @@
           }
         </div>
 
-        <div>
+        <div class="min-w-0">
           <div
             class="relative h-64 overflow-hidden rounded-3xl border border-sand-deep/60 bg-sand sm:h-80 lg:h-full"
           >
@@ -160,10 +160,12 @@
   } @placeholder (minimum 300ms) {
     <div class="ox-container ox-section">
       <div class="ox-skeleton mb-8 h-8 w-64"></div>
-      <div class="grid grid-cols-2 gap-5 lg:grid-cols-4">
+      <div class="ox-rail">
         @for (placeholder of [1, 2, 3, 4]; track placeholder) {
-          <div class="ox-card overflow-hidden">
-            <div class="ox-skeleton aspect-[4/5] w-full rounded-none"></div>
+          <div class="sm:w-48 lg:w-56">
+            <div class="ox-card overflow-hidden">
+              <div class="ox-skeleton aspect-[4/5] w-full rounded-none"></div>
+            </div>
           </div>
         }
       </div>
@@ -196,9 +198,11 @@
     <app-collections-section />
   } @placeholder {
     <div class="ox-container ox-section">
-      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        @for (placeholder of [1, 2, 3, 4]; track placeholder) {
-          <div class="ox-skeleton aspect-[4/3] rounded-2xl"></div>
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:auto-rows-[13rem]">
+        @for (placeholder of [1, 2, 3]; track placeholder) {
+          <div
+            class="ox-skeleton h-60 rounded-2xl sm:first:col-span-2 sm:first:h-72 lg:h-full lg:first:col-span-2 lg:first:row-span-2 lg:first:h-full"
+          ></div>
         }
       </div>
     </div>
@@ -268,9 +272,9 @@
       </div>
     </section>
   } @placeholder {
-    <div class="bg-ink/5">
+    <div class="bg-ink">
       <div class="ox-container ox-section">
-        <div class="ox-skeleton h-48 rounded-2xl"></div>
+        <div class="h-48 rounded-2xl bg-ivory/5"></div>
       </div>
     </div>
   }
@@ -279,9 +283,11 @@
     <app-new-arrivals-section />
   } @placeholder {
     <div class="ox-container ox-section">
-      <div class="grid grid-cols-2 gap-5 lg:grid-cols-4">
+      <div class="ox-rail">
         @for (placeholder of [1, 2, 3, 4]; track placeholder) {
-          <div class="ox-skeleton aspect-[4/5] rounded-2xl"></div>
+          <div class="sm:w-48 lg:w-56">
+            <div class="ox-skeleton aspect-[4/5] rounded-2xl"></div>
+          </div>
         }
       </div>
     </div>

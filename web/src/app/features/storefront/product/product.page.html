@@ -59,7 +59,7 @@
             </div>
 
             @if (images().length > 1) {
-              <div class="flex gap-2 overflow-x-auto pb-1">
+              <div class="flex gap-2 overflow-x-auto overflow-y-clip pb-1">
                 @for (image of images(); track image.url; let index = $index) {
                   <button
                     type="button"
@@ -281,7 +281,7 @@
               <p class="ox-eyebrow">Pairs well with</p>
               <h2 class="ox-display mt-1 text-2xl text-ink">Related pieces</h2>
             </header>
-            <div class="flex gap-5 overflow-x-auto pb-2">
+            <div class="flex gap-5 overflow-x-auto overflow-y-clip pb-2">
               @for (relatedItem of related(); track relatedItem.id) {
                 <div class="w-52 shrink-0 sm:w-60">
                   <app-product-card [product]="relatedItem" />
@@ -292,7 +292,7 @@
         }
       } @placeholder {
         <div class="ox-container mt-4 pb-4">
-          <div class="flex gap-5 overflow-x-auto pb-2">
+          <div class="flex gap-5 overflow-x-auto overflow-y-clip pb-2">
             @for (placeholder of [1, 2, 3, 4]; track placeholder) {
               <div class="w-52 shrink-0 sm:w-60">
                 <div class="ox-skeleton aspect-[4/5] rounded-2xl"></div>

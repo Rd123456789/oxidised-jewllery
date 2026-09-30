@@ -6,12 +6,13 @@ import { CatalogService } from '../../../../core/services/catalog.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { PriceTag } from '../../../../shared/components/price/price';
 import { ProductCard } from '../../../../shared/components/product-card/product-card';
+import { ScrollRail } from '../../../../shared/components/scroll-rail/scroll-rail';
 import { SectionHeader } from '../../../../shared/components/section-header/section-header';
 
 @Component({
   selector: 'app-featured-products-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, ProductCard, SectionHeader],
+  imports: [RouterLink, ProductCard, ScrollRail, SectionHeader],
   host: { class: 'block ox-reveal' },
   templateUrl: './featured-products.section.html',
 })

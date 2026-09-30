@@ -7,9 +7,9 @@
   />
 
   @if (loading()) {
-    <div class="flex gap-5">
+    <div class="ox-rail">
       @for (placeholder of [1, 2, 3, 4]; track placeholder) {
-        <div class="w-40 shrink-0 sm:w-48 lg:w-56">
+        <div class="sm:w-48 lg:w-56">
           <div class="ox-card overflow-hidden">
             <div class="ox-skeleton aspect-[4/5] w-full rounded-none"></div>
             <div class="space-y-2 p-4">
@@ -26,10 +26,10 @@
       <a routerLink="/shop" class="underline">collection</a>.
     </p>
   } @else {
-    <div class="ox-rail ox-stagger">
+    <app-scroll-rail>
       @for (product of products(); track product.id) {
-        <app-product-card class="block w-40 shrink-0 sm:w-48 lg:w-56" [product]="product" />
+        <app-product-card class="block sm:w-48 lg:w-56" [product]="product" />
       }
-    </div>
+    </app-scroll-rail>
   }
 </section>

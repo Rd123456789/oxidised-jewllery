@@ -2,12 +2,13 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal }
 import type { ProductSummary } from '../../../../core/api/api.models';
 import { CatalogService } from '../../../../core/services/catalog.service';
 import { ProductCard } from '../../../../shared/components/product-card/product-card';
+import { ScrollRail } from '../../../../shared/components/scroll-rail/scroll-rail';
 import { SectionHeader } from '../../../../shared/components/section-header/section-header';
 
 @Component({
   selector: 'app-new-arrivals-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ProductCard, SectionHeader],
+  imports: [ProductCard, ScrollRail, SectionHeader],
   host: { class: 'block ox-reveal' },
   templateUrl: './new-arrivals.section.html',
 })

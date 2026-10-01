@@ -12,6 +12,7 @@ export const registerSchema = z
       .regex(/^[0-9+\-\s]{6,20}$/, 'Enter a valid phone number')
       .optional(),
     marketingOptIn: z.boolean().optional(),
+    mobile: z.boolean().optional(),
   })
   .strict();
 
@@ -19,12 +20,14 @@ export const loginSchema = z
   .object({
     email: emailSchema,
     password: z.string().min(1, 'Password is required'),
+    mobile: z.boolean().optional(),
   })
   .strict();
 
 export const refreshSchema = z
   .object({
     refreshToken: z.string().min(10).optional(),
+    mobile: z.boolean().optional(),
   })
   .strict();
 

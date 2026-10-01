@@ -25,6 +25,28 @@ function setRefreshCookie(res: Response, token: string): void {
   res.cookie(REFRESH_COOKIE, token, refreshCookieOptions());
 }
 
+/**
+ * Native clients (React Native) have no `httpOnly` cookie jar: Android's is in-memory, so the
+ * session dies on every app restart. Those clients send `mobile: true` and get the refresh
+ * token in the response body instead, storing it in the Keychain. Browsers never send the flag
+ * and keep the cookie exactly as before, so web behaviour is unchanged.
+ *
+ * `/auth/refresh` is the exception: it keys off a body-supplied token rather than the flag, so
+ * a native client also receives the *rotated* token. Without that it could refresh once and
+ * then be locked out, because `refreshSession` invalidates the token it was given.
+ */
+function isMobileRequest(req: Request): boolean {
+  return (req.body as { mobile?: boolean } | undefined)?.mobile === true;
+}
+
+function setRefresh(res: Response, req: Request, token: string): void {
+  if (isMobileRequest(req)) {
+    return;
+  }
+
+  setRefreshCookie(res, token);
+}
+
 function currentUser(req: Request): UserHydratedDocument {
   if (!req.currentUser) {
     throw ApiError.unauthorized();
@@ -35,47 +57,60 @@ function currentUser(req: Request): UserHydratedDocument {
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const result = await authService.register(req.body);
-  setRefreshCookie(res, result.refreshToken);
+  setRefresh(res, req, result.refreshToken);
 
   sendSuccess(
     res,
-    { user: result.user, accessToken: result.accessToken, expiresIn: result.expiresIn },
+    {
+      user: result.user,
+      accessToken: result.accessToken,
+      expiresIn: result.expiresIn,
+      ...(isMobileRequest(req) ? { refreshToken: result.refreshToken } : {}),
+    },
     { status: 201, message: 'Your account is ready' },
   );
 });
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const result = await authService.login(req.body);
-  setRefreshCookie(res, result.refreshToken);
+  setRefresh(res, req, result.refreshToken);
 
   sendSuccess(res, {
     user: result.user,
     accessToken: result.accessToken,
     expiresIn: result.expiresIn,
+    ...(isMobileRequest(req) ? { refreshToken: result.refreshToken } : {}),
   });
 });
 
 export const adminLogin = asyncHandler(async (req: Request, res: Response) => {
   const result = await authService.login(req.body, 'admin');
-  setRefreshCookie(res, result.refreshToken);
+  setRefresh(res, req, result.refreshToken);
 
   sendSuccess(res, {
     user: result.user,
     accessToken: result.accessToken,
     expiresIn: result.expiresIn,
+    ...(isMobileRequest(req) ? { refreshToken: result.refreshToken } : {}),
   });
 });
 
 export const refresh = asyncHandler(async (req: Request, res: Response) => {
   const cookies = req.cookies as Record<string, string> | undefined;
-  const token = (req.body as { refreshToken?: string }).refreshToken ?? cookies?.[REFRESH_COOKIE];
+  const bodyToken = (req.body as { refreshToken?: string } | undefined)?.refreshToken;
+  const token = bodyToken ?? cookies?.[REFRESH_COOKIE];
   const result = await authService.refreshSession(token);
-  setRefreshCookie(res, result.refreshToken);
+  const fromBody = Boolean(bodyToken);
+
+  if (!fromBody) {
+    setRefreshCookie(res, result.refreshToken);
+  }
 
   sendSuccess(res, {
     user: result.user,
     accessToken: result.accessToken,
     expiresIn: result.expiresIn,
+    ...(fromBody ? { refreshToken: result.refreshToken } : {}),
   });
 });
 

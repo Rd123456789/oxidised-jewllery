@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { env } from '../config/env.js';
 import * as controller from '../controllers/auth.controller.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, optionalAuthenticate } from '../middleware/auth.js';
 import { authLimiter, writeLimiter } from '../middleware/rateLimit.js';
 import { validate } from '../middleware/validate.js';
 import { idParamSchema } from '../validators/common.validator.js';
@@ -13,7 +13,7 @@ router.post('/register', authLimiter, validate({ body: schema.registerSchema }),
 router.post('/login', authLimiter, validate({ body: schema.loginSchema }), controller.login);
 router.post('/admin/login', authLimiter, validate({ body: schema.loginSchema }), controller.adminLogin);
 router.post('/refresh', controller.refresh);
-router.post('/logout', controller.logout);
+router.post('/logout', optionalAuthenticate(), controller.logout);
 router.post(
   '/forgot-password',
   authLimiter,

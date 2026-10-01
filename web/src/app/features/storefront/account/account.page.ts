@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { OrderService } from '../../../core/services/order.service';
 import { SeoService } from '../../../core/services/seo.service';
 import { SessionService } from '../../../core/services/session.service';
+import { SignOutService } from '../../../core/services/sign-out.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatCurrency, formatDate } from '../../../core/utils/format';
 import { Icon, type IconName } from '../../../shared/components/icon/icon';
@@ -23,7 +24,7 @@ interface AccountTab {
 export class AccountPage {
   private readonly session = inject(SessionService);
   private readonly orders = inject(OrderService);
-  private readonly router = inject(Router);
+  private readonly signOutFlow = inject(SignOutService);
   private readonly toast = inject(ToastService);
   private readonly seo = inject(SeoService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -70,9 +71,8 @@ export class AccountPage {
   }
 
   async signOut(): Promise<void> {
-    await this.session.logout();
+    await this.signOutFlow.signOut();
     this.toast.info('You have been signed out');
-    await this.router.navigate(['/']);
     this.cdr.markForCheck();
   }
 }

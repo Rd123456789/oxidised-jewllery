@@ -14,6 +14,7 @@ import { CartService } from '../../core/services/cart.service';
 import { CatalogService } from '../../core/services/catalog.service';
 import { ContentService } from '../../core/services/content.service';
 import { SessionService } from '../../core/services/session.service';
+import { SignOutService } from '../../core/services/sign-out.service';
 import { ToastService } from '../../core/services/toast.service';
 import { focusFirst, trapTabKey } from '../../core/utils/focus-trap';
 import { Icon } from '../../shared/components/icon/icon';
@@ -44,6 +45,7 @@ export class StorefrontLayout {
   readonly session = inject(SessionService);
   readonly cart = inject(CartService);
   readonly wishlist = inject(WishlistService);
+  private readonly signOutFlow = inject(SignOutService);
 
   readonly settings = this.content.settings;
   readonly footerPages = this.content.footerPages;
@@ -136,14 +138,10 @@ export class StorefrontLayout {
   }
 
   async signOut(): Promise<void> {
-    await this.session.logout();
-    this.cart.reset();
-    this.wishlist.reset();
-    await this.cart.load();
+    await this.signOutFlow.signOut();
     this.accountOpen.set(false);
     this.closeMenu();
     this.toast.info('Signed out');
-    this.cdr.markForCheck();
   }
 
   async subscribe(event: Event): Promise<void> {

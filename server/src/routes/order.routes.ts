@@ -16,9 +16,12 @@ import { objectIdSchema } from '../validators/common.validator.js';
 
 const router = Router();
 
+// An order has to belong to someone. With `optionalAuthenticate` a guest could place one, and the
+// result was an orphan: no `user`, no history, and no way for the buyer to cancel it, because
+// cancellation requires ownership. Quoting stays open — it prices a bag and creates nothing.
 router.post(
   '/orders',
-  optionalAuthenticate(),
+  authenticate(),
   idempotency(),
   writeLimiter,
   validate({ body: placeOrderSchema }),

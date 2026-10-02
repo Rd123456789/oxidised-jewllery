@@ -150,6 +150,7 @@ export const routes: Routes = [
       },
       {
         path: 'checkout',
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./features/storefront/checkout/checkout.page').then(
             (module) => module.CheckoutPage,

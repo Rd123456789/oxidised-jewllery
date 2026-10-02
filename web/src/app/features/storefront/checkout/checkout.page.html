@@ -35,53 +35,14 @@
             <h2 class="ox-display text-lg text-ink">Contact</h2>
           </header>
 
-          @if (!isAuthenticated()) {
-            <div class="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-sand/60 px-4 py-3 text-sm text-ink-soft">
-              <app-icon name="user" [size]="16" />
-              <span>Have an account?</span>
-              <a
-                routerLink="/login"
-                [queryParams]="{ redirect: '/checkout' }"
-                class="font-semibold text-brass underline-offset-2 hover:underline"
-              >
-                Sign in
-              </a>
-              <span>for saved addresses and faster checkout.</span>
-            </div>
-
-            <div class="mt-4">
-              <label class="ox-label" for="checkout-email">
-                Email address <span class="text-rose">*</span>
-              </label>
-              <input
-                id="checkout-email"
-                type="email"
-                class="ox-input"
-                placeholder="you@example.com"
-                autocomplete="email"
-                [value]="email()"
-                (input)="setEmail($event)"
-                [attr.aria-invalid]="fieldError('guestEmail') ? 'true' : null"
-                [attr.aria-describedby]="fieldError('guestEmail') ? 'checkout-guestEmail-error' : null"
-              />
-              @if (fieldError('guestEmail')) {
-                <p id="checkout-guestEmail-error" class="ox-field-error" role="alert">
-                  {{ fieldError('guestEmail') }}
-                </p>
-              } @else {
-                <p class="ox-help">We will send your order confirmation to this address.</p>
-              }
-            </div>
-          } @else {
-            <p class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-soft">
-              <app-icon name="check" [size]="16" class="shrink-0" />
-              <span>Checking out as</span>
-              <strong class="font-semibold text-ink">{{ displayName() }}</strong>
-              @if (email()) {
-                <span class="break-all text-ink-muted">({{ email() }})</span>
-              }
-            </p>
-          }
+          <p class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-soft">
+            <app-icon name="check" [size]="16" class="shrink-0" />
+            <span>Checking out as</span>
+            <strong class="font-semibold text-ink">{{ displayName() }}</strong>
+            @if (email()) {
+              <span class="break-all text-ink-muted">({{ email() }})</span>
+            }
+          </p>
         </section>
 
         <!-- Step 2: shipping address -->

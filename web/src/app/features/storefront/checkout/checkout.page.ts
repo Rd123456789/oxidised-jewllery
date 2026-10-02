@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { ApiError, type ApiFieldError } from '../../../core/api/api-error';
 import type {
   Address,
@@ -52,7 +52,7 @@ function createIdempotencyKey(): string {
 @Component({
   selector: 'checkout-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, EmptyState],
+  imports: [Icon, EmptyState],
   templateUrl: './checkout.page.html',
 })
 export class CheckoutPage {
@@ -125,10 +125,6 @@ export class CheckoutPage {
   onSubmit(event: Event): void {
     event.preventDefault();
     void this.submit();
-  }
-
-  setEmail(event: Event): void {
-    this.email.set((event.target as HTMLInputElement).value);
   }
 
   setNote(event: Event): void {
@@ -258,10 +254,6 @@ export class CheckoutPage {
     const errors: ApiFieldError[] = [];
     const address = this.address();
 
-    if (!this.session.isAuthenticated() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email().trim())) {
-      errors.push({ field: 'guestEmail', message: 'Enter a valid email address.' });
-    }
-
     if (address.fullName.trim().length < 2) {
       errors.push({ field: 'fullName', message: 'Enter the full name for delivery.' });
     }
@@ -327,8 +319,8 @@ export class CheckoutPage {
       paymentMethod: this.paymentMethod(),
       couponCode: this.couponCode() ?? undefined,
       customerNote: this.note().trim() || undefined,
-      guestEmail: this.session.isAuthenticated() ? undefined : this.email().trim(),
-      saveAddress: this.session.isAuthenticated() ? this.saveAddress() : undefined,
+      // Checkout is behind the auth guard, so there is no guest case left to branch on.
+      saveAddress: this.saveAddress(),
     };
 
     this.submitting.set(true);

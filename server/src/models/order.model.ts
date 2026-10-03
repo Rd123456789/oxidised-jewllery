@@ -213,13 +213,16 @@ const orderSchema = new Schema<OrderDocument>(
       ],
       default: [],
     },
-    tracking: {
-      carrier: { type: String, trim: true },
-      trackingNumber: { type: String, trim: true },
-      trackingUrl: { type: String, trim: true },
-      shippedAt: { type: Date },
-      deliveredAt: { type: Date },
-    },
+    // Left without a default on purpose. A nested default does not materialise on read — the API kept
+      // omitting `tracking` for unshipped orders, which is what broke the order detail views. It is
+      // normalised in `order.controller` instead, where the response is built.
+      tracking: {
+        carrier: { type: String, trim: true },
+        trackingNumber: { type: String, trim: true },
+        trackingUrl: { type: String, trim: true },
+        shippedAt: { type: Date },
+        deliveredAt: { type: Date },
+      },
     customerNote: { type: String, trim: true, maxlength: 1000 },
     adminNote: { type: String, trim: true, maxlength: 2000 },
     cancelReason: { type: String, trim: true, maxlength: 500 },

@@ -97,10 +97,30 @@ export const myOrders = asyncHandler(async (req: Request, res: Response) => {
   sendSuccess(res, result.orders, { meta: result.meta });
 });
 
+/**
+ * Guarantees `tracking` in a response.
+ *
+ * Mongoose omits a nested path that has never been written, so `tracking` was missing from every
+ * order that had not shipped yet. Both the account order page and the admin page read
+ * `order.tracking.carrier`, so the page threw on its first render. The schema default does not help:
+ * a default is applied when a document is written, not when one is read back. Normalising here means
+ * the shape a client sees no longer depends on whether an admin has filled in a courier.
+ */
+export function withTracking<T extends { tracking?: unknown }>(order: T): T & { tracking: Record<string, unknown> } {
+  const plain = typeof (order as { toObject?: unknown }).toObject === 'function'
+    ? (order as unknown as { toObject: () => T }).toObject()
+    : order;
+
+  return {
+    ...plain,
+    tracking: (plain.tracking ?? {}) as Record<string, unknown>,
+  };
+}
+
 export const myOrder = asyncHandler(async (req: Request, res: Response) => {
   const order = await getOrderForCustomer(req.auth?.userId as string, req.params['orderNumber'] as string);
 
-  sendSuccess(res, order);
+  sendSuccess(res, withTracking(order));
 });
 
 export const cancelMyOrder = asyncHandler(async (req: Request, res: Response) => {
@@ -119,16 +139,19 @@ export const track = asyncHandler(async (req: Request, res: Response) => {
 
   const order = await trackOrder(orderNumber, phone);
 
-  sendSuccess(res, {
-    orderNumber: order.orderNumber,
-    status: order.status,
-    placedAt: order.placedAt,
-    items: order.items,
-    pricing: order.pricing,
-    tracking: order.tracking,
-    statusHistory: order.statusHistory,
-    customerName: order.customerName,
-  });
+  sendSuccess(
+    res,
+    withTracking({
+      orderNumber: order.orderNumber,
+      status: order.status,
+      placedAt: order.placedAt,
+      items: order.items,
+      pricing: order.pricing,
+      tracking: order.tracking,
+      statusHistory: order.statusHistory,
+      customerName: order.customerName,
+    }),
+  );
 });
 
 export const verifyPayment = asyncHandler(async (req: Request, res: Response) => {

@@ -4,6 +4,7 @@ import { Order, type OrderDocument } from '../../models/order.model.js';
 import { User } from '../../models/user.model.js';
 import { ApiError } from '../../utils/apiError.js';
 import { asyncHandler, sendSuccess } from '../../utils/http.js';
+import { withTracking } from '../order.controller.js';
 import { buildPaginationMeta, buildSort, escapeRegex, parsePagination, toBoolean } from '../../utils/query.js';
 import { getOrderByNumber, listAdminOrders, updateOrderStatus } from '../../services/order.service.js';
 import type { z } from 'zod';
@@ -22,7 +23,7 @@ export const listOrders = asyncHandler(async (req: Request, res: Response) => {
 export const getOrder = asyncHandler(async (req: Request, res: Response) => {
   const order = await getOrderByNumber(req.params['orderNumber'] as string);
 
-  sendSuccess(res, order);
+  sendSuccess(res, withTracking(order));
 });
 
 export const updateStatus = asyncHandler(async (req: Request, res: Response) => {

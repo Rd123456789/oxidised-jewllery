@@ -290,10 +290,14 @@ export class AdminOrderDetailPage {
         paymentStatus: order.payment.status,
         cancelReason: order.cancelReason ?? '',
       });
+      // `tracking` is absent from the response until an admin records it, so it is read through a
+      // fallback. Dereferencing it directly threw on load for every order that had not shipped.
+      const tracking = order.tracking;
+
       this.trackingForm.set({
-        carrier: order.tracking.carrier ?? '',
-        trackingNumber: order.tracking.trackingNumber ?? '',
-        trackingUrl: order.tracking.trackingUrl ?? '',
+        carrier: tracking?.carrier ?? '',
+        trackingNumber: tracking?.trackingNumber ?? '',
+        trackingUrl: tracking?.trackingUrl ?? '',
       });
       this.adminNote.set(order.adminNote ?? '');
       this.seo.set({ title: `Order ${order.orderNumber}` });

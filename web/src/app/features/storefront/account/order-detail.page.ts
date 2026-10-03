@@ -83,10 +83,24 @@ export class AccountOrderDetailPage {
     });
   });
 
+  /**
+   * The API omits `tracking` entirely until an admin records it, so it is read through a fallback
+   * rather than dereferenced directly. `computed` re-runs on every change detection pass, so a bare
+   * `order.tracking.carrier` threw on the very first render for every order that had not shipped
+   * yet and took the whole page down with it.
+   */
   readonly trackingLink = computed(() => {
     const order = this.order();
 
-    return order ? trackingUrlFor(order.tracking.carrier, order.tracking.trackingNumber) : null;
+    if (!order) {
+      return null;
+    }
+
+    const tracking = order.tracking;
+
+    return tracking
+      ? trackingUrlFor(tracking.carrier, tracking.trackingNumber)
+      : null;
   });
 
   readonly canCancel = computed(() => {

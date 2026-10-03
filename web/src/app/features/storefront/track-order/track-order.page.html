@@ -117,7 +117,7 @@
           </ol>
         </section>
 
-        @if (info.tracking.carrier || info.tracking.trackingNumber) {
+        @if (info.tracking && (info.tracking.carrier || info.tracking.trackingNumber)) {
           <section class="ox-card p-6">
             <h2 class="ox-display text-lg text-ink">Tracking details</h2>
             <div class="mt-3 flex flex-wrap items-center justify-between gap-3">

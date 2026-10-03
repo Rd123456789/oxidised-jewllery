@@ -5,9 +5,17 @@
  * storefront reads. Kept lean on purpose — this sits inside the 4kB per-component style budget. */
 
 :host {
-  /* So the absolutely positioned children can anchor to the viewport. */
+  /* A zero-size anchor pinned to the corner, NOT `inset: 0`.
+   *
+   * Spanning the viewport gave the widget a full-screen fixed layer sitting on top of the document, so
+   * every scroll frame repainted a screen-sized surface behind a 52px button — the reason the badge
+   * juddered while a page moved. Anchoring at zero size lets the children position themselves and
+   * leaves the compositor with nothing to redraw but them. */
   position: fixed;
-  inset: 0;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
   pointer-events: none;
   z-index: 60;
 }
@@ -18,7 +26,7 @@
   pointer-events: auto;
 }
 
-/* Every circular control shares these; grouping keeps this file inside the 4kB component budget. */
+/* Every circular control shares these; grouping keeps this file inside the component budget. */
 .chat-launcher,
 .chat-mark,
 .chat-close,
@@ -26,6 +34,16 @@
   display: grid;
   place-items: center;
   border-radius: 999px;
+}
+
+/* Promoted to its own compositor layer so the soft shadow is painted once into the layer rather than
+ * re-rasterised on every scroll frame. `translateZ(0)` is the promotion; `will-change` tells the
+   browser it is coming rather than letting it discover it mid-scroll, which is what causes the first
+   few frames to hitch. */
+.chat-launcher,
+.chat-panel {
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .chat-launcher {
@@ -40,8 +58,13 @@
   transition: transform 0.18s ease;
 }
 
+/* Composed with the layer promotion above rather than replacing it. */
 .chat-launcher:hover {
-  transform: translateY(-1px);
+  transform: translateZ(0) translateY(-1px);
+}
+
+.chat-launcher:active {
+  transform: translateZ(0) translateY(0) scale(0.96);
 }
 
 .chat-launcher:focus-visible,
@@ -50,14 +73,19 @@
   outline-offset: 3px;
 }
 
+/* `fixed` rather than `absolute`: the host is deliberately zero-size, so an absolute scrim would be
+   zero-size too and the dimming would never appear. */
 .chat-scrim {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background-color: rgb(20 17 15 / 0.45);
 }
 
 /* Always rendered and revealed by transform, so the panel can animate open. `visibility` keeps a
-   closed panel out of the tab order. */
+   closed panel out of the tab order.
+   The hidden state keeps the `translateZ(0)` from the promotion rule above — dropping it would
+   de-promote the layer at exactly the moment the open transition starts, which drops the first frames
+   onto the main thread and makes the panel stutter as it appears. */
 .chat-panel {
   position: absolute;
   right: 1.25rem;
@@ -71,7 +99,7 @@
   border-radius: var(--radius-card);
   background-color: var(--color-paper);
   box-shadow: var(--shadow-lift);
-  transform: translateY(1rem) scale(0.98);
+  transform: translateZ(0) translateY(1rem) scale(0.98);
   transform-origin: bottom right;
   opacity: 0;
   visibility: hidden;
@@ -82,7 +110,7 @@
 }
 
 .chat-panel--open {
-  transform: none;
+  transform: translateZ(0) translateY(0) scale(1);
   opacity: 1;
   visibility: visible;
 }

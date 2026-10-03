@@ -4,6 +4,7 @@ import catalogRoutes from './catalog.routes.js';
 import cartRoutes from './cart.routes.js';
 import orderRoutes from './order.routes.js';
 import contentRoutes from './content.routes.js';
+import chatRoutes from './chat.routes.js';
 import adminRoutes from './admin/index.js';
 import { databaseStatus } from '../config/db.js';
 
@@ -26,6 +27,7 @@ router.use('/', catalogRoutes);
 router.use('/', cartRoutes);
 router.use('/', orderRoutes);
 router.use('/', contentRoutes);
+router.use('/', chatRoutes);
 router.use('/admin', adminRoutes);
 
 export default router;

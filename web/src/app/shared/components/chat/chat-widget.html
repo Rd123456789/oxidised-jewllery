@@ -1,0 +1,122 @@
+<button
+  class="chat-launcher"
+  type="button"
+  [attr.aria-expanded]="open()"
+  aria-controls="store-assistant"
+  [attr.aria-label]="open() ? 'Close the store assistant' : 'Open the store assistant'"
+  (click)="toggle()"
+>
+  @if (open()) {
+    <app-icon name="close" [size]="22" />
+  } @else {
+    <app-icon name="sparkles" [size]="22" />
+  }
+</button>
+
+@if (open()) {
+  <div class="chat-scrim" (click)="close()"></div>
+}
+
+<section
+  id="store-assistant"
+  class="chat-panel"
+  [class.chat-panel--open]="open()"
+  role="dialog"
+  aria-label="Store assistant"
+  [attr.aria-hidden]="!open()"
+>
+  <header class="chat-head">
+    <span class="chat-mark"><app-icon name="sparkles" [size]="18" /></span>
+
+    <div class="chat-head-copy">
+      <p class="chat-title">Store assistant</p>
+      <p class="chat-sub">Stock, care and delivery</p>
+    </div>
+
+    <button class="chat-close" type="button" aria-label="Close the store assistant" (click)="close()">
+      <app-icon name="close" [size]="20" />
+    </button>
+  </header>
+
+  <div #scroller class="chat-thread">
+    @for (message of messages(); track message.id) {
+      <div class="chat-turn">
+        <div
+          class="chat-bubble"
+          [class.chat-bubble--user]="message.role === 'user'"
+          [class.chat-bubble--bot]="message.role === 'assistant'"
+        >
+          {{ message.text }}
+        </div>
+
+        @for (product of message.products ?? []; track product.slug) {
+          <a class="chat-product" [routerLink]="['/product', product.slug]" (click)="close()">
+            <span class="chat-thumb">
+              @if (product.image) {
+                <img [src]="product.image" [alt]="product.name" loading="lazy" />
+              } @else {
+                <app-icon name="image" [size]="18" />
+              }
+            </span>
+
+            <span class="chat-product-copy">
+              <span class="chat-product-name">{{ product.name }}</span>
+              <span class="chat-product-meta">
+                {{ money(product.price, product.currency) }} ·
+                @if (!product.inStock) {
+                  Sold out
+                } @else if (product.lowStock) {
+                  Only {{ product.stock }} left
+                } @else {
+                  In stock
+                }
+              </span>
+            </span>
+
+            <app-icon name="chevron-right" [size]="16" />
+          </a>
+        }
+
+        @if (message.suggestions?.length) {
+          <div class="chat-chips">
+            @for (suggestion of message.suggestions; track suggestion) {
+              <button class="chat-chip" type="button" [disabled]="busy()" (click)="send(suggestion)">
+                {{ suggestion }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    @if (busy()) {
+      <p class="chat-typing">Looking that up…</p>
+    }
+
+    @if (error(); as message) {
+      <button class="chat-error" type="button" (click)="error.set(null)">
+        <app-icon name="alert" [size]="16" />
+        {{ message }}
+      </button>
+    }
+  </div>
+
+  <form class="chat-composer" (submit)="send(); $event.preventDefault()">
+    <input
+      class="chat-input"
+      type="text"
+      name="question"
+      autocomplete="off"
+      maxlength="280"
+      placeholder="Ask about a piece, care or delivery"
+      [ngModel]="draft()"
+      (ngModelChange)="draft.set($event)"
+      [disabled]="busy()"
+      aria-label="Ask the store assistant"
+    />
+
+    <button class="chat-send" type="submit" [disabled]="!canSend()" aria-label="Send">
+      <app-icon name="arrow-right" [size]="18" />
+    </button>
+  </form>
+</section>

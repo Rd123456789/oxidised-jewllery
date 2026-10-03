@@ -20,6 +20,7 @@ import { focusFirst, trapTabKey } from '../../core/utils/focus-trap';
 import { Icon } from '../../shared/components/icon/icon';
 import { MiniCart } from '../../shared/components/mini-cart/mini-cart';
 import { SearchAutocomplete } from '../../shared/components/search-autocomplete/search-autocomplete';
+import { ChatWidget } from '../../shared/components/chat/chat-widget';
 import { WishlistService } from '../../core/services/wishlist.service';
 
 @Component({
@@ -32,6 +33,7 @@ import { WishlistService } from '../../core/services/wishlist.service';
     Icon,
     SearchAutocomplete,
     MiniCart,
+    ChatWidget,
   ],
   templateUrl: './storefront-layout.html',
   host: { '(document:keydown.escape)': 'closeAll()' },

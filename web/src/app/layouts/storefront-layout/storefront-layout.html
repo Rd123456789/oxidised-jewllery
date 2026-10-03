@@ -420,4 +420,8 @@
   </div>
 
   <app-mini-cart [open]="miniCartOpen()" (closed)="miniCartOpen.set(false)" />
+
+  <!-- The assistant lives on the storefront layout, so it is on every browsing page at once. The
+       admin panel deliberately has none: its questions are operational, not about the jewellery. -->
+  <app-chat-widget />
 </div>

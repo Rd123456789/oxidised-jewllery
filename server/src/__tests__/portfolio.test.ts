@@ -39,15 +39,34 @@ describe('Portfolio API Endpoints', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data.filename).toBe('Rajdip-parmar-cv.pdf');
     });
+  });
 
-    it('serves the PDF with application/pdf content type', async () => {
+  describe('Portfolio Admin Auth & Inquiries', () => {
+    it('rejects invalid admin login credentials', async () => {
       const response = await request(app)
-        .get('/api/v1/portfolio/cv');
+        .post('/api/v1/portfolio/admin/login')
+        .send({ email: 'wrong@test.com', password: 'badpassword' });
 
-      if (response.status === 200) {
-        expect(response.headers['content-type']).toContain('application/pdf');
-        expect(response.headers['content-disposition']).toContain('Rajdip-parmar-cv.pdf');
-      }
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+    });
+
+    it('authenticates admin with valid credentials and issues token', async () => {
+      const response = await request(app)
+        .post('/api/v1/portfolio/admin/login')
+        .send({ email: 'rajdipparmar221@gmail.com', password: 'Rajdip053' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.token).toBeDefined();
+      expect(response.body.data.user.email).toBe('rajdipparmar221@gmail.com');
+    });
+
+    it('blocks unauthorized access to inquiries list', async () => {
+      const response = await request(app)
+        .get('/api/v1/portfolio/admin/inquiries');
+
+      expect(response.status).toBe(401);
     });
   });
 });

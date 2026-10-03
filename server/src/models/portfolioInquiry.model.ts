@@ -8,6 +8,7 @@ export interface PortfolioInquiryDocument {
   source?: string;
   ip?: string;
   userAgent?: string;
+  isRead?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,6 +23,7 @@ const portfolioInquirySchema = new Schema<PortfolioInquiryDocument>(
     source: { type: String, trim: true, default: 'portfolio-3d' },
     ip: { type: String, trim: true },
     userAgent: { type: String, trim: true },
+    isRead: { type: Boolean, default: false },
   },
   schemaOptions,
 );

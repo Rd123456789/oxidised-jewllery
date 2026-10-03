@@ -6,6 +6,7 @@ import orderRoutes from './order.routes.js';
 import contentRoutes from './content.routes.js';
 import chatRoutes from './chat.routes.js';
 import adminRoutes from './admin/index.js';
+import portfolioRoutes from './portfolio.routes.js';
 import { databaseStatus } from '../config/db.js';
 
 const router = Router();
@@ -29,5 +30,6 @@ router.use('/', orderRoutes);
 router.use('/', contentRoutes);
 router.use('/', chatRoutes);
 router.use('/admin', adminRoutes);
+router.use('/portfolio', portfolioRoutes);
 
 export default router;

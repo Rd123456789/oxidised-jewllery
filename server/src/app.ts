@@ -56,9 +56,16 @@ function corsDelegate(): CorsOptionsDelegate {
     const host = req.headers.host;
     const selfOrigin = typeof host === 'string' ? [`https://${host}`, `http://${host}`] : [];
 
+    const portfolioOrigins = [
+      'https://rajdip-parmar-portfolio.onrender.com',
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ];
+
     const allowed =
       !origin ||
       selfOrigin.includes(origin) ||
+      portfolioOrigins.includes(origin) ||
       env.corsOrigins.includes(origin) ||
       env.corsOrigins.includes('*');
 

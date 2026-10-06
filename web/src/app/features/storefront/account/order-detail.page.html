@@ -1,18 +1,18 @@
 @if (loading()) {
   <div class="space-y-5">
-    <div class="ox-card p-6">
+    <div class="ox-card p-4 sm:p-6">
       <div class="ox-skeleton h-6 w-48"></div>
       <div class="ox-skeleton mt-3 h-4 w-64"></div>
     </div>
-    <div class="ox-card p-6">
+    <div class="ox-card p-4 sm:p-6">
       <div class="ox-skeleton h-40 rounded-xl"></div>
     </div>
-    <div class="ox-card p-6">
+    <div class="ox-card p-4 sm:p-6">
       <div class="ox-skeleton h-28 rounded-xl"></div>
     </div>
   </div>
 } @else if (notFound()) {
-  <div class="ox-card p-10 text-center" role="alert">
+  <div class="ox-card p-8 text-center sm:p-10" role="alert">
     <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose/10 text-rose">
       <app-icon name="alert" [size]="22" />
     </span>
@@ -24,42 +24,42 @@
   </div>
 } @else {
   @if (order(); as order) {
-    <div class="space-y-6">
+    <div class="space-y-5 sm:space-y-6">
       <a class="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft hover:text-brass" routerLink="..">
         <app-icon name="chevron-left" [size]="15" />
         Back to orders
       </a>
 
-      <header class="ox-card p-6">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div>
+      <header class="ox-card p-4 sm:p-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-4">
+          <div class="min-w-0">
             <p class="ox-eyebrow">Order</p>
-            <h1 class="ox-page-title mt-1">{{ order.orderNumber }}</h1>
+            <h1 class="ox-page-title mt-1 break-words">{{ order.orderNumber }}</h1>
             <p class="mt-1 text-sm text-ink-soft">Placed {{ formatDateTime(order.placedAt) }}</p>
             @if (order.invoiceNumber) {
-              <p class="text-sm text-ink-soft">Invoice {{ order.invoiceNumber }}</p>
+              <p class="text-sm text-ink-soft break-words">Invoice {{ order.invoiceNumber }}</p>
             }
           </div>
           <app-status-badge [label]="titleCase(order.status)" [tone]="orderTone(order.status)" />
         </div>
       </header>
 
-      <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div class="space-y-6">
-          <section class="ox-card p-6">
+      <div class="grid min-w-0 gap-5 sm:gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div class="min-w-0 space-y-5 sm:space-y-6">
+          <section class="ox-card p-4 sm:p-6">
             <h2 class="ox-display text-xl text-ink">Order status</h2>
-            <ol class="relative mt-5 space-y-5 border-l border-sand-deep pl-6">
+            <ol class="relative mt-5 space-y-5 border-l border-sand-deep pl-5 sm:pl-6">
               @for (step of timeline(); track step.status) {
                 <li class="relative">
                   <span
-                    class="absolute -left-[1.9rem] top-1 h-3.5 w-3.5 rounded-full border-2"
+                    class="absolute -left-[1.6rem] top-1 h-3.5 w-3.5 rounded-full border-2 sm:-left-[1.9rem]"
                     [class.border-brass]="step.completed"
                     [class.bg-brass]="step.completed"
                     [class.border-sand-deep]="!step.completed"
                     [class.bg-sand]="!step.completed"
                   ></span>
                   <p
-                    class="text-sm font-semibold"
+                    class="text-sm font-semibold break-words"
                     [class.text-ink]="step.completed"
                     [class.text-ink-muted]="!step.completed"
                   >
@@ -69,19 +69,19 @@
                     <p class="text-xs text-ink-muted">{{ formatDateTime(step.changedAt) }}</p>
                   }
                   @if (step.note) {
-                    <p class="mt-1 text-sm text-ink-soft">{{ step.note }}</p>
+                    <p class="mt-1 text-sm text-ink-soft break-words">{{ step.note }}</p>
                   }
                 </li>
               }
             </ol>
           </section>
 
-          <section class="ox-card p-6">
+          <section class="ox-card p-4 sm:p-6">
             <h2 class="ox-display text-xl text-ink">Items</h2>
 
             <div class="mt-4 divide-y divide-sand-deep/60">
               @for (item of order.items; track item.sku) {
-                <div class="flex items-center gap-4 py-3">
+                <div class="flex items-start gap-3 py-3 sm:items-center sm:gap-4">
                   @if (item.image) {
                     <img
                       [src]="item.image"
@@ -96,11 +96,11 @@
                   }
                   <div class="min-w-0 flex-1">
                     <p class="truncate text-sm font-semibold text-ink">{{ item.name }}</p>
-                    <p class="mt-0.5 text-xs text-ink-muted">
+                    <p class="mt-0.5 text-xs break-words text-ink-muted">
                       SKU {{ item.sku }} · Qty {{ item.quantity }}
                     </p>
                   </div>
-                  <p class="text-sm font-semibold text-ink">
+                  <p class="shrink-0 whitespace-nowrap text-sm font-semibold text-ink">
                     {{ formatCurrency(item.lineTotal, order.pricing.currency) }}
                   </p>
                 </div>
@@ -108,23 +108,23 @@
             </div>
 
             <dl class="mt-5 space-y-2 border-t border-sand-deep/60 pt-4 text-sm">
-              <div class="flex items-center justify-between">
-                <dt class="text-ink-soft">Subtotal</dt>
-                <dd class="text-ink">
+              <div class="flex items-center justify-between gap-4">
+                <dt class="min-w-0 text-ink-soft">Subtotal</dt>
+                <dd class="shrink-0 whitespace-nowrap text-right text-ink">
                   {{ formatCurrency(order.pricing.subtotal, order.pricing.currency) }}
                 </dd>
               </div>
               @if (order.pricing.discount > 0) {
-                <div class="flex items-center justify-between">
-                  <dt class="text-ink-soft">Discount</dt>
-                  <dd class="text-olive">
+                <div class="flex items-center justify-between gap-4">
+                  <dt class="min-w-0 text-ink-soft">Discount</dt>
+                  <dd class="shrink-0 whitespace-nowrap text-right text-olive">
                     −{{ formatCurrency(order.pricing.discount, order.pricing.currency) }}
                   </dd>
                 </div>
               }
-              <div class="flex items-center justify-between">
-                <dt class="text-ink-soft">Shipping</dt>
-                <dd class="text-ink">
+              <div class="flex items-center justify-between gap-4">
+                <dt class="min-w-0 text-ink-soft">Shipping</dt>
+                <dd class="shrink-0 whitespace-nowrap text-right text-ink">
                   @if (order.pricing.freeShipping || order.pricing.shippingFee === 0) {
                     Free
                   } @else {
@@ -133,22 +133,22 @@
                 </dd>
               </div>
               @if (order.pricing.codFee > 0) {
-                <div class="flex items-center justify-between">
-                  <dt class="text-ink-soft">COD fee</dt>
-                  <dd class="text-ink">
+                <div class="flex items-center justify-between gap-4">
+                  <dt class="min-w-0 text-ink-soft">COD fee</dt>
+                  <dd class="shrink-0 whitespace-nowrap text-right text-ink">
                     {{ formatCurrency(order.pricing.codFee, order.pricing.currency) }}
                   </dd>
                 </div>
               }
-              <div class="flex items-center justify-between">
-                <dt class="text-ink-soft">Tax</dt>
-                <dd class="text-ink">
+              <div class="flex items-center justify-between gap-4">
+                <dt class="min-w-0 text-ink-soft">Tax</dt>
+                <dd class="shrink-0 whitespace-nowrap text-right text-ink">
                   {{ formatCurrency(order.pricing.taxAmount, order.pricing.currency) }}
                 </dd>
               </div>
-              <div class="flex items-center justify-between border-t border-sand-deep/60 pt-3 text-base font-semibold">
+              <div class="flex items-center justify-between gap-4 border-t border-sand-deep/60 pt-3 text-base font-semibold">
                 <dt class="text-ink">Total</dt>
-                <dd class="text-ink">
+                <dd class="shrink-0 whitespace-nowrap text-right text-ink">
                   {{ formatCurrency(order.pricing.total, order.pricing.currency) }}
                 </dd>
               </div>
@@ -156,17 +156,17 @@
           </section>
 
           @if (order.customerNote) {
-            <section class="ox-card p-6">
+            <section class="ox-card p-4 sm:p-6">
               <h2 class="ox-display text-xl text-ink">Your note</h2>
-              <p class="mt-2 text-sm text-ink-soft">{{ order.customerNote }}</p>
+              <p class="mt-2 text-sm text-ink-soft break-words">{{ order.customerNote }}</p>
             </section>
           }
         </div>
 
-        <aside class="space-y-6">
-          <section class="ox-card p-5">
+        <aside class="min-w-0 space-y-4 sm:space-y-6">
+          <section class="ox-card p-4 sm:p-5">
             <h2 class="ox-display text-lg text-ink">Delivery address</h2>
-            <address class="mt-3 text-sm not-italic text-ink-soft">
+            <address class="mt-3 text-sm not-italic text-ink-soft break-words">
               <p class="font-semibold text-ink">{{ order.shippingAddress.fullName }}</p>
               <p>{{ order.shippingAddress.line1 }}</p>
               @if (order.shippingAddress.line2) {
@@ -184,16 +184,16 @@
             </address>
           </section>
 
-          <section class="ox-card p-5">
+          <section class="ox-card p-4 sm:p-5">
             <h2 class="ox-display text-lg text-ink">Payment</h2>
             <dl class="mt-3 space-y-2 text-sm">
-              <div class="flex items-center justify-between">
-                <dt class="text-ink-soft">Method</dt>
-                <dd class="text-ink">{{ titleCase(order.payment.method) }}</dd>
+              <div class="flex items-center justify-between gap-4">
+                <dt class="min-w-0 text-ink-soft">Method</dt>
+                <dd class="shrink-0 text-right text-ink">{{ titleCase(order.payment.method) }}</dd>
               </div>
-              <div class="flex items-center justify-between">
-                <dt class="text-ink-soft">Status</dt>
-                <dd>
+              <div class="flex items-center justify-between gap-4">
+                <dt class="min-w-0 text-ink-soft">Status</dt>
+                <dd class="shrink-0">
                   <app-status-badge
                     [label]="titleCase(order.payment.status)"
                     [tone]="paymentTone(order.payment.status)"
@@ -201,14 +201,14 @@
                 </dd>
               </div>
               @if (order.payment.paidAt) {
-                <div class="flex items-center justify-between">
-                  <dt class="text-ink-soft">Paid on</dt>
-                  <dd class="text-ink">{{ formatDateTime(order.payment.paidAt) }}</dd>
+                <div class="flex items-center justify-between gap-4">
+                  <dt class="min-w-0 text-ink-soft">Paid on</dt>
+                  <dd class="shrink-0 text-right text-ink">{{ formatDateTime(order.payment.paidAt) }}</dd>
                 </div>
               }
-              <div class="flex items-center justify-between">
-                <dt class="text-ink-soft">Amount</dt>
-                <dd class="text-ink">
+              <div class="flex items-center justify-between gap-4">
+                <dt class="min-w-0 text-ink-soft">Amount</dt>
+                <dd class="shrink-0 whitespace-nowrap text-right text-ink">
                   {{ formatCurrency(order.payment.amount, order.pricing.currency) }}
                 </dd>
               </div>
@@ -216,38 +216,38 @@
           </section>
 
           @if (order.tracking && (order.tracking.carrier || order.tracking.trackingNumber)) {
-            <section class="ox-card p-5">
+            <section class="ox-card p-4 sm:p-5">
               <h2 class="ox-display text-lg text-ink">Tracking</h2>
               <dl class="mt-3 space-y-2 text-sm">
                 @if (order.tracking.carrier) {
-                  <div class="flex items-center justify-between gap-3">
-                    <dt class="text-ink-soft">Carrier</dt>
-                    <dd class="text-right text-ink">{{ order.tracking.carrier }}</dd>
+                  <div class="flex items-start justify-between gap-4">
+                    <dt class="shrink-0 text-ink-soft">Carrier</dt>
+                    <dd class="min-w-0 break-words text-right text-ink">{{ order.tracking.carrier }}</dd>
                   </div>
                 }
                 @if (order.tracking.trackingNumber) {
-                  <div class="flex items-center justify-between gap-3">
-                    <dt class="text-ink-soft">Number</dt>
-                    <dd class="text-right text-ink">{{ order.tracking.trackingNumber }}</dd>
+                  <div class="flex items-start justify-between gap-4">
+                    <dt class="shrink-0 text-ink-soft">Number</dt>
+                    <dd class="min-w-0 break-words text-right text-ink">{{ order.tracking.trackingNumber }}</dd>
                   </div>
                 }
                 @if (order.tracking.shippedAt) {
-                  <div class="flex items-center justify-between gap-3">
-                    <dt class="text-ink-soft">Shipped</dt>
-                    <dd class="text-right text-ink">{{ formatDateTime(order.tracking.shippedAt) }}</dd>
+                  <div class="flex items-start justify-between gap-4">
+                    <dt class="shrink-0 text-ink-soft">Shipped</dt>
+                    <dd class="min-w-0 text-right text-ink">{{ formatDateTime(order.tracking.shippedAt) }}</dd>
                   </div>
                 }
                 @if (order.tracking.deliveredAt) {
-                  <div class="flex items-center justify-between gap-3">
-                    <dt class="text-ink-soft">Delivered</dt>
-                    <dd class="text-right text-ink">{{ formatDateTime(order.tracking.deliveredAt) }}</dd>
+                  <div class="flex items-start justify-between gap-4">
+                    <dt class="shrink-0 text-ink-soft">Delivered</dt>
+                    <dd class="min-w-0 text-right text-ink">{{ formatDateTime(order.tracking.deliveredAt) }}</dd>
                   </div>
                 }
               </dl>
 
               @if (trackingLink(); as link) {
                 <a
-                  class="ox-btn ox-btn--outline ox-btn--sm mt-3"
+                  class="ox-btn ox-btn--outline ox-btn--sm mt-3 w-full justify-center sm:w-auto"
                   [href]="link"
                   target="_blank"
                   rel="noopener"
@@ -259,7 +259,7 @@
             </section>
           }
 
-          <section class="ox-card p-5">
+          <section class="ox-card p-4 sm:p-5">
             <h2 class="ox-display text-lg text-ink">Actions</h2>
 
             <div class="mt-3 space-y-2">
